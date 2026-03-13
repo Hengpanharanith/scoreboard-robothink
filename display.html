@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>ROBO SCORE // Display</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet">
+    <style>
+  :root {
+    --cyan: #00f5ff;
+    --orange: #ff6b35;
+    --bg: #060a0e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* BG image layer */
+  #bg-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-image: url('https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1600');
+    opacity: 0.18;
+    z-index: 0;
+  }
+
+  /* Grid overlay */
+  #grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 1;
+  }
+
+  /* Corner decorations */
+  .corner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    z-index: 10;
+  }
+  .corner-tl { top: 16px; left: 16px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .corner-tr { top: 16px; right: 16px; border-top: 2px solid var(--orange); border-right: 2px solid var(--orange); }
+  .corner-bl { bottom: 16px; left: 16px; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .corner-br { bottom: 16px; right: 16px; border-bottom: 2px solid var(--orange); border-right: 2px solid var(--orange); }
+
+  #main {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 40px 40px 140px 40px;
+  }
+
+  /* Top bar */
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--orange));
+  }
+
+  /* Title */
+  .match-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 8px;
+    color: rgba(200,220,232,0.4);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Main scoreboard area */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  /* Team side */
+  .team-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px;
+  }
+
+  .team-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .team-a .team-name { color: var(--cyan); text-shadow: 0 0 20px rgba(0,245,255,0.6); }
+  .team-b .team-name { color: var(--orange); text-shadow: 0 0 20px rgba(255,107,53,0.6); }
+
+  .score {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 160px;
+    line-height: 1;
+    letter-spacing: -4px;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .team-a .score {
+    color: var(--cyan);
+    text-shadow: 0 0 60px rgba(0,245,255,0.5), 0 0 120px rgba(0,245,255,0.2);
+  }
+
+  .team-b .score {
+    color: var(--orange);
+    text-shadow: 0 0 60px rgba(255,107,53,0.5), 0 0 120px rgba(255,107,53,0.2);
+  }
+
+  .score.flash { animation: scoreFlash 0.4s ease; }
+
+  @keyframes scoreFlash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  /* Center divider */
+  .center-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 0 40px;
+  }
+
+  .vs-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: rgba(200,220,232,0.3);
+  }
+
+  .divider-line {
+    width: 2px;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--cyan), var(--orange));
+    opacity: 0.4;
+  }
+
+  /* Timer */
+  .timer-box {
+    background: rgba(8,12,16,0.85);
+    border: 1px solid rgba(0,245,255,0.2);
+    padding: 16px 32px;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    position: relative;
+  }
+
+  .timer-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  .timer-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-align: center;
+    color: rgba(0,245,255,0.5);
+    margin-bottom: 4px;
+  }
+
+  .timer-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(0,245,255,0.4);
+  }
+
+  .timer-value.urgent { color: #ff3344; text-shadow: 0 0 20px rgba(255,51,68,0.6); animation: timerBlink 0.5s infinite; }
+  @keyframes timerBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  /* Sponsors */
+  .sponsor-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(6,10,14,0.92);
+    border-top: 1px solid rgba(0,245,255,0.15);
+    padding: 18px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 5;
+  }
+
+  .sponsor-label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: rgba(200,220,232,0.3);
+  }
+
+  .sponsor-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .sponsor-logos img {
+    height: 100px;
+    max-width: 180px;
+    object-fit:fill;
+    filter: brightness(1) contrast(1.1);
+    opacity: 1;
+    background: rgba(255,255,255,0.06);
+    padding: 8px 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Scan line animation */
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+  }
+
+  /* Bottom accent bar */
+  .bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--cyan));
+  }
+
+  /* Hex decorations */
+  .hex-dec {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,245,255,0.15);
+    letter-spacing: 2px;
+    z-index: 5;
+  }
+  .hex-tl { top: 28px; left: 90px; }
+  .hex-tr { top: 28px; right: 90px; }
+  .hex-bl { bottom: 28px; left: 90px; }
+  .hex-br { bottom: 28px; right: 90px; }
+</style>
+  </head>
+  <body>
+
+    <div id="bg-layer"></div>
+    <div id="grid-overlay"></div>
+    <div class="scanlines"></div>
+
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="top-bar"></div>
+    <div class="bottom-bar"></div>
+
+    <div id="main">
+      <div class="match-title">⬡ ROBOT THINK · COMPETITION · 2026
+        ⬡</div>
+
+      <div class="scoreboard">
+        <!-- Team A -->
+        <div class="team-side team-a">
+          <div class="team-name" id="teamAName">TEAM ALPHA</div>
+          <div class="score" id="scoreA">0</div>
+        </div>
+
+        <!-- Center -->
+        <div class="center-panel">
+          <div class="divider-line"></div>
+          <div class="timer-box">
+            <div class="timer-label">MATCH TIME</div>
+            <div class="timer-value" id="timer">10:00</div>
+          </div>
+          <div class="vs-text">VS</div>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- Team B -->
+        <div class="team-side team-b">
+          <div class="team-name" id="teamBName">TEAM BETA</div>
+          <div class="score" id="scoreB">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sponsors -->
+    <div class="sponsor-bar" id="sponsorBar" style="display:none;">
+      <div class="sponsor-label">◈ SPONSORED BY</div>
+      <div class="sponsor-logos" id="sponsorLogos"></div>
+    </div>
+
+    <script>
+let prevScoreA = 0, prevScoreB = 0;
+
+function flash(el) {
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+}
+
+window.addEventListener("message", (event) => {
+  const d = event.data;
+
+  document.getElementById("teamAName").innerText = d.teamA || "TEAM ALPHA";
+  document.getElementById("teamBName").innerText = d.teamB || "TEAM BETA";
+
+  const sa = document.getElementById("scoreA");
+  const sb = document.getElementById("scoreB");
+
+  if (d.scoreA !== prevScoreA) { sa.innerText = d.scoreA; flash(sa); prevScoreA = d.scoreA; }
+  if (d.scoreB !== prevScoreB) { sb.innerText = d.scoreB; flash(sb); prevScoreB = d.scoreB; }
+
+  const timerEl = document.getElementById("timer");
+  timerEl.innerText = d.timer;
+
+  // Red urgent if under 30s
+  const parts = d.timer.split(":");
+  const secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  timerEl.classList.toggle("urgent", secs <= 30);
+
+  if (d.background) {
+    document.getElementById("bg-layer").style.backgroundImage = `url(${d.background})`;
+  }
+
+  if (d.sponsors && d.sponsors.length > 0) {
+    const bar = document.getElementById("sponsorBar");
+    const logos = document.getElementById("sponsorLogos");
+    bar.style.display = "flex";
+    logos.innerHTML = "";
+    d.sponsors.forEach(s => {
+      const img = document.createElement("img");
+      img.src = s.src;
+      logos.appendChild(img);
+    });
+  } else {
+    document.getElementById("sponsorBar").style.display = "none";
+  }
+});
+</script>
+  </body>
+</html>

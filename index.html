@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scoreboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --orange: #ff6b35;
+    --bg: #080c10;
+    --panel: #0d1520;
+    --border: #1a2d40;
+    --text: #c8dce8;
+    --dim: #4a6070;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    padding: 24px;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .header-icon {
+    width: 48px; height: 48px;
+    background: var(--cyan);
+    clip-path: polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 2px;
+  }
+
+  .open-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.2s;
+  }
+  .open-btn:hover { background: var(--cyan); color: var(--bg); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), transparent);
+  }
+
+  .panel.orange::before {
+    background: linear-gradient(90deg, var(--orange), transparent);
+  }
+
+  .panel-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel.orange .panel-label { color: var(--orange); }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dim);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  input[type="text"], input[type="number"] {
+    background: rgba(0,245,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--cyan);
+  }
+
+  .panel.orange input[type="text"]:focus {
+    border-color: var(--orange);
+  }
+
+  input[type="file"] {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .score-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 72px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-align: center;
+    padding: 16px 0;
+    text-shadow: 0 0 30px rgba(0,245,255,0.4);
+    letter-spacing: 4px;
+  }
+
+  .panel.orange .score-display {
+    color: var(--orange);
+    text-shadow: 0 0 30px rgba(255,107,53,0.4);
+  }
+
+  .score-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    margin-top: 12px;
+  }
+
+  .score-input-row input {
+    flex: 1;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  .btn-plus { background: rgba(0,245,255,0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+  .btn-plus:hover { background: var(--cyan); color: var(--bg); }
+
+  .btn-minus { background: rgba(255,107,53,0.12); color: var(--orange); border: 1px solid var(--orange); }
+  .btn-minus:hover { background: var(--orange); color: var(--bg); }
+
+  .btn-show { background: rgba(0,245,255,0.1); color: var(--cyan); border: 1px solid rgba(0,245,255,0.4); padding: 10px 18px; }
+  .btn-show:hover { background: var(--cyan); color: var(--bg); }
+
+  .btn-neutral { background: rgba(200,220,232,0.07); color: var(--text); border: 1px solid var(--border); }
+  .btn-neutral:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .btn-set { background: rgba(0,245,255,0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+  .btn-set:hover { background: var(--cyan); color: var(--bg); }
+
+  .score-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .score-btn-row .btn { flex: 1; padding: 12px; font-size: 18px; }
+
+  .timer-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 80px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-align: center;
+    padding: 16px 0;
+    text-shadow: 0 0 40px rgba(0,245,255,0.5);
+    letter-spacing: 6px;
+  }
+
+  .timer-controls { display: flex; gap: 8px; margin-top: 12px; }
+  .timer-controls .btn { flex: 1; padding: 12px; }
+
+  .set-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center;
+  }
+
+  .set-row input { width: 80px; font-size: 16px; text-align: center; }
+
+  .sponsor-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+  .sponsor-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .sponsor-item img { height: 32px; object-fit: contain; }
+  .sponsor-item span { flex: 1; color: var(--text); }
+
+  .remove-btn {
+    background: transparent;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .remove-btn:hover { background: var(--orange); color: var(--bg); }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .timer-log {
+    margin-top: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .timer-log table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .timer-log th {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+
+  .timer-log td {
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(26,45,64,0.5);
+    color: var(--text);
+  }
+
+  .timer-log tr:last-child td { border-bottom: none; }
+
+  .log-badge {
+    display: inline-block;
+    background: rgba(0,245,255,0.1);
+    border: 1px solid rgba(0,245,255,0.3);
+    color: var(--cyan);
+    font-size: 9px;
+    padding: 2px 6px;
+    letter-spacing: 1px;
+  }
+
+  .empty-log {
+    color: var(--dim);
+    font-size: 11px;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .btn-export {
+    background: rgba(0,245,255,0.08);
+    color: var(--cyan);
+    border: 1px solid rgba(0,245,255,0.4);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    cursor: pointer;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    transition: all 0.15s;
+  }
+  .btn-export:hover { background: var(--cyan); color: var(--bg); }
+
+
+
+  .section { margin-top: 20px; }
+
+  .flex-row { display: flex; gap: 8px; align-items: flex-end; }
+  .flex-row > * { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">⚙</div>
+  <div>
+    <h1>RoboScore Control</h1>
+    <div class="subtitle">MATCH BROADCAST SYSTEM // OPERATOR PANEL</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-right:16px;">
+    <div class="status-dot"></div>
+    <span style="font-size:11px;color:var(--dim);letter-spacing:2px;">LIVE</span>
+  </div>
+  <button class="open-btn" onclick="openDisplay()">⬡ OPEN DISPLAY</button>
+</div>
+
+<!-- TEAMS -->
+<div class="grid-2">
+
+  <!-- TEAM A (CYAN) -->
+  <div class="panel">
+    <div class="panel-label">◈ TEAM ALPHA</div>
+
+    <label>TEAM NAME</label>
+    <input type="text" id="teamA" value="Team Alpha" oninput="send()">
+
+    <label>SCORE OVERRIDE</label>
+    <div class="score-input-row">
+      <input type="number" id="scoreInputA" value="0" min="0" placeholder="0">
+      <button class="btn btn-show" onclick="setScore('A')">SET</button>
+    </div>
+
+    <div class="score-display" id="scoreA">0</div>
+
+    <div class="score-btn-row">
+      <button class="btn btn-plus" onclick="addScore('A')">+1</button>
+      <button class="btn btn-minus" onclick="minusScore('A')">−1</button>
+    </div>
+  </div>
+
+  <!-- TEAM B (ORANGE) -->
+  <div class="panel orange">
+    <div class="panel-label">◈ TEAM BETA</div>
+
+    <label>TEAM NAME</label>
+    <input type="text" id="teamB" value="Team Beta" oninput="send()">
+
+    <label>SCORE OVERRIDE</label>
+    <div class="score-input-row">
+      <input type="number" id="scoreInputB" value="0" min="0" placeholder="0">
+      <button class="btn btn-show" onclick="setScore('B')" style="border-color:var(--orange);color:var(--orange);">SET</button>
+    </div>
+
+    <div class="score-display" id="scoreB">0</div>
+
+    <div class="score-btn-row">
+      <button class="btn btn-plus" onclick="addScore('B')" style="border-color:var(--orange);color:var(--orange);background:rgba(255,107,53,0.1);">+1</button>
+      <button class="btn btn-minus" onclick="minusScore('B')">−1</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TIMER -->
+<div class="panel" style="margin-top:20px;">
+  <div class="panel-label">◈ MATCH TIMER</div>
+
+  <div class="timer-display" id="timer">10:00</div>
+
+  <div class="timer-controls">
+    <button class="btn btn-set" onclick="startTimer()">▶ START</button>
+    <button class="btn btn-neutral" onclick="pauseTimer()">⏸ PAUSE</button>
+    <button class="btn btn-minus" onclick="resetTimer()">↺ RESET</button>
+    <button class="btn-export" onclick="exportExcel()">⬇ EXPORT XLS</button>
+  </div>
+
+  <div class="timer-log">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>EVENT</th>
+          <th>MATCH</th>
+          <th>TIME PAUSED</th>
+          <th>SCORE A</th>
+          <th>SCORE B</th>
+          <th>TIMESTAMP</th>
+        </tr>
+      </thead>
+      <tbody id="timerLogBody">
+        <tr><td colspan="7" class="empty-log">No pauses recorded yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="set-row" style="margin-top:16px;">
+    <label style="margin:0;white-space:nowrap;">SET MINUTES:</label>
+    <input type="number" id="minutesInput" value="10" min="1" style="width:80px;flex:none;">
+    <button class="btn btn-set" onclick="setTimer()">APPLY</button>
+  </div>
+</div>
+
+<!-- BACKGROUND & SPONSORS in 2 cols -->
+<div class="grid-2" style="margin-top:20px;">
+
+  <div class="panel">
+    <div class="panel-label">◈ BACKGROUND</div>
+    <label>UPLOAD IMAGE</label>
+    <input type="file" accept="image/*" id="backgroundInput">
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">◈ SPONSORS</div>
+    <label>ADD SPONSOR LOGO</label>
+    <input type="file" accept="image/*" id="sponsorInput">
+    <div class="sponsor-list" id="sponsorList"></div>
+  </div>
+
+</div>
+
+<script>
+let displayWindow = null;
+function openDisplay() {
+  displayWindow = window.open("display.html", "display", "width=1280,height=800");
+}
+
+let scoreA = 0, scoreB = 0;
+let bg = "";
+let sponsors = [];
+
+function addScore(team) {
+  if (team === "A") { scoreA++; document.getElementById("scoreA").innerText = scoreA; document.getElementById("scoreInputA").value = scoreA; }
+  if (team === "B") { scoreB++; document.getElementById("scoreB").innerText = scoreB; document.getElementById("scoreInputB").value = scoreB; }
+  send();
+}
+
+function minusScore(team) {
+  if (team === "A") { scoreA = Math.max(0, scoreA - 1); document.getElementById("scoreA").innerText = scoreA; document.getElementById("scoreInputA").value = scoreA; }
+  if (team === "B") { scoreB = Math.max(0, scoreB - 1); document.getElementById("scoreB").innerText = scoreB; document.getElementById("scoreInputB").value = scoreB; }
+  send();
+}
+
+function setScore(team) {
+  if (team === "A") { scoreA = parseInt(document.getElementById("scoreInputA").value) || 0; document.getElementById("scoreA").innerText = scoreA; }
+  if (team === "B") { scoreB = parseInt(document.getElementById("scoreInputB").value) || 0; document.getElementById("scoreB").innerText = scoreB; }
+  send();
+}
+
+let total = 600, timer = null, timerLog = [], logCounter = 0;
+
+function updateTimer() {
+  let m = Math.floor(total / 60), s = total % 60;
+  let t = String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
+  document.getElementById("timer").innerText = t;
+  send();
+}
+
+function startTimer() {
+  if (timer) return;
+  timer = setInterval(() => {
+    if (total <= 0) { clearInterval(timer); timer = null; return; }
+    total--;
+    updateTimer();
+  }, 1000);
+}
+
+function pauseTimer() {
+  if (!timer) return; // only log if actually running
+  clearInterval(timer);
+  timer = null;
+  logCounter++;
+  const now = new Date();
+  const timestamp = now.toLocaleTimeString();
+  const timeLeft = document.getElementById("timer").innerText;
+  const tA = document.getElementById("teamA").value || "Team Alpha";
+  const tB = document.getElementById("teamB").value || "Team Beta";
+  timerLog.push({
+    no: logCounter,
+    event: "PAUSE",
+    matchup: `${tA} vs ${tB}`,
+    timeLeft,
+    scoreA,
+    scoreB,
+    timestamp
+  });
+  renderLog();
+}
+
+function resetTimer() {
+  if (timer) { clearInterval(timer); timer = null; }
+  logCounter++;
+  const tA = document.getElementById("teamA").value || "Team Alpha";
+  const tB = document.getElementById("teamB").value || "Team Beta";
+  timerLog.push({
+    no: logCounter,
+    event: "RESET",
+    matchup: `${tA} vs ${tB}`,
+    timeLeft: document.getElementById("timer").innerText,
+    scoreA,
+    scoreB,
+    timestamp: new Date().toLocaleTimeString()
+  });
+  total = 600;
+  updateTimer();
+  renderLog();
+}
+
+function renderLog() {
+  const tbody = document.getElementById("timerLogBody");
+  if (timerLog.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-log">No pauses recorded yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...timerLog].reverse().map(r => `
+    <tr>
+      <td>${r.no}</td>
+      <td><span class="log-badge">${r.event}</span></td>
+      <td style="color:var(--cyan);font-size:11px;">${r.matchup}</td>
+      <td>${r.timeLeft}</td>
+      <td>${r.scoreA}</td>
+      <td>${r.scoreB}</td>
+      <td>${r.timestamp}</td>
+    </tr>
+  `).join("");
+}
+
+function exportExcel() {
+  const teamA = document.getElementById("teamA").value || "Team Alpha";
+  const teamB = document.getElementById("teamB").value || "Team Beta";
+
+  const header = [["#", "Event", "Match", "Time Left", `Score: ${teamA}`, `Score: ${teamB}`, "Timestamp"]];
+  const rows = timerLog.map(r => [r.no, r.event, r.matchup, r.timeLeft, r.scoreA, r.scoreB, r.timestamp]);
+
+  const ws = XLSX.utils.aoa_to_sheet([...header, ...rows]);
+
+  ws['!cols'] = [
+    {wch: 4}, {wch: 8}, {wch: 28}, {wch: 12}, {wch: 16}, {wch: 16}, {wch: 14}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Timer Log");
+
+  const matchDate = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `RoboScore_TimerLog_${matchDate}.xlsx`);
+}
+
+function setTimer() {
+  let min = parseInt(document.getElementById("minutesInput").value) || 10;
+  total = min * 60;
+  updateTimer();
+}
+
+function send() {
+  if (!displayWindow) return;
+  displayWindow.postMessage({
+    teamA: document.getElementById("teamA").value,
+    teamB: document.getElementById("teamB").value,
+    scoreA, scoreB,
+    timer: document.getElementById("timer").innerText,
+    background: bg,
+    sponsors
+  }, "*");
+}
+
+// Background
+document.getElementById("backgroundInput").onchange = e => {
+  let r = new FileReader();
+  r.onload = () => { bg = r.result; send(); };
+  r.readAsDataURL(e.target.files[0]);
+};
+
+// Sponsors
+document.getElementById("sponsorInput").onchange = e => {
+  let file = e.target.files[0];
+  if (!file) return;
+  let r = new FileReader();
+  r.onload = () => {
+    let id = Date.now();
+    sponsors.push({ id, src: r.result, name: file.name });
+    renderSponsors();
+    send();
+  };
+  r.readAsDataURL(file);
+  e.target.value = "";
+};
+
+function removeSponsor(id) {
+  sponsors = sponsors.filter(s => s.id !== id);
+  renderSponsors();
+  send();
+}
+
+function renderSponsors() {
+  const list = document.getElementById("sponsorList");
+  list.innerHTML = "";
+  sponsors.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "sponsor-item";
+    div.innerHTML = `<img src="${s.src}"><span>${s.name}</span><button class="remove-btn" onclick="removeSponsor(${s.id})">✕ REMOVE</button>`;
+    list.appendChild(div);
+  });
+}
+
+updateTimer();
+</script>
+</body>
+</html>
