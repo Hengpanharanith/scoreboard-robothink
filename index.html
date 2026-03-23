@@ -1,5 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="UTF-8">
     <title>RoboRace Control</title>
@@ -9,137 +10,791 @@
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-  :root{
-    --blue:#3B82F6;--blue-light:#EFF6FF;--blue-mid:#BFDBFE;
-    --red:#EF4444;--red-light:#FEF2F2;--red-mid:#FECACA;
-    --green:#22C55E;--green-light:#F0FDF4;
-    --yellow:#F59E0B;--purple:#8B5CF6;--orange:#F97316;
-    --bg:#F0F4FF;--card:#FFF;--border:#E2E8F0;
-    --text:#1E293B;--muted:#64748B;
-    --shadow:0 4px 20px rgba(59,130,246,.12);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(59,130,246,.07) 0%,transparent 50%),radial-gradient(circle at 85% 85%,rgba(139,92,246,.05) 0%,transparent 50%);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;padding:18px;}
+    :root {
+      --blue: #3B82F6;
+      --blue-light: #EFF6FF;
+      --blue-mid: #BFDBFE;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --red-mid: #FECACA;
+      --green: #22C55E;
+      --green-light: #F0FDF4;
+      --yellow: #F59E0B;
+      --purple: #8B5CF6;
+      --orange: #F97316;
+      --bg: #F0F4FF;
+      --card: #FFF;
+      --border: #E2E8F0;
+      --text: #1E293B;
+      --muted: #64748B;
+      --shadow: 0 4px 20px rgba(59, 130, 246, .12);
+    }
 
-  /* HEADER */
-  .header{display:flex;align-items:center;gap:12px;margin-bottom:18px;background:var(--card);border-radius:20px;padding:13px 20px;box-shadow:var(--shadow);border:2px solid var(--blue-mid);}
-  .rl{font-size:34px;animation:float 3s ease-in-out infinite;}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  h1{font-family:'Fredoka One',cursive;font-size:23px;color:var(--blue);}
-  .sub{font-size:11px;color:var(--muted);font-weight:700;}
-  .live-badge{margin-left:auto;background:#DCFCE7;border:2px solid #86EFAC;color:#16A34A;font-weight:800;font-size:12px;padding:5px 13px;border-radius:20px;display:flex;align-items:center;gap:5px;}
-  .ld{width:7px;height:7px;border-radius:50%;background:#16A34A;animation:pulse 1.5s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-  .open-btn{background:var(--blue);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;padding:9px 16px;border:none;border-radius:12px;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(59,130,246,.35);}
-  .open-btn:hover{background:#2563EB;transform:translateY(-2px);}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* CARDS */
-  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow);border:2px solid var(--border);margin-bottom:16px;}
-  .st{font-family:'Fredoka One',cursive;font-size:16px;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
-  .fg{display:flex;flex-direction:column;gap:4px;}
-  .fg label{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
-  input[type="text"],input[type="number"]{font-family:'Nunito',sans-serif;background:#F8FAFF;border:2px solid var(--border);color:var(--text);font-size:13px;font-weight:700;padding:8px 12px;border-radius:11px;outline:none;transition:border-color .2s,box-shadow .2s;}
-  input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.13);}
-  .rrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, .07) 0%, transparent 50%), radial-gradient(circle at 85% 85%, rgba(139, 92, 246, .05) 0%, transparent 50%);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      padding: 18px;
+    }
 
-  /* TEAM POOL */
-  .team-pool{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
-  .tr{display:flex;align-items:center;gap:9px;background:#F8FAFF;border:2px solid var(--border);border-radius:13px;padding:9px 11px;transition:border-color .2s;}
-  .tr:hover{border-color:var(--blue-mid);}
-  .tcd{width:15px;height:15px;border-radius:50%;flex-shrink:0;}
-  .ni{flex:1;border:none;background:transparent;padding:0;font-size:14px;font-weight:800;box-shadow:none;color:var(--text);outline:none;font-family:'Nunito',sans-serif;}
-  .tit{width:48px;height:48px;border-radius:11px;background:#F1F5F9;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;overflow:hidden;flex-shrink:0;transition:border-color .2s;position:relative;}
-  .tit:hover{border-color:var(--blue);}
-  .tit img{width:100%;height:100%;object-fit:cover;}
-  /* float on preview */
-  .tit img{animation:thumbFloat 3s ease-in-out infinite;}
-  @keyframes thumbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.04)}}
-  .tit .emoji-preview{display:inline-block;animation:thumbBob 2.8s ease-in-out infinite;}
-  @keyframes thumbBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-5px) rotate(5deg)}}
-  .ifi{display:none;}
-  .rmb{background:var(--red-light);border:2px solid var(--red-mid);color:var(--red);border-radius:8px;width:27px;height:27px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-  .rmb:hover{background:var(--red);color:#fff;}
-  .add-tb{background:var(--green-light);border:2px dashed #86EFAC;color:var(--green);font-family:'Fredoka One',cursive;font-size:13px;padding:9px;border-radius:13px;cursor:pointer;width:100%;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
-  .add-tb:hover{background:#DCFCE7;transform:translateY(-1px);}
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 13px 20px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--blue-mid);
+    }
 
-  /* FINISH LIST */
-  .fl{display:flex;flex-direction:column;gap:7px;}
-  .ftr{display:flex;align-items:center;gap:11px;background:#F8FAFF;border:2px solid var(--border);border-radius:13px;padding:9px 13px;transition:all .3s;}
-  .ftr.finished{border-color:#FCD34D;background:#FFFBEB;}
-  .frank{font-family:'Fredoka One',cursive;font-size:20px;width:32px;text-align:center;flex-shrink:0;}
-  .fimg{width:44px;height:44px;border-radius:10px;background:#E2E8F0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;}
-  .fimg img{width:100%;height:100%;object-fit:cover;}
-  .fname{flex:1;font-weight:800;font-size:14px;}
-  .ftime{font-size:12px;color:var(--muted);font-weight:700;min-width:58px;text-align:right;}
-  .bfin{font-family:'Fredoka One',cursive;font-size:12px;padding:7px 14px;border-radius:10px;border:2px solid;cursor:pointer;transition:all .15s;flex-shrink:0;background:#D1FAE5;border-color:#6EE7B7;color:#059669;}
-  .bfin:hover{background:var(--green);color:#fff;transform:scale(1.05);}
-  .bfin:disabled{background:#F1F5F9;border-color:var(--border);color:var(--muted);cursor:not-allowed;transform:none;}
-  .bunfin{font-family:'Fredoka One',cursive;font-size:11px;padding:6px 11px;border-radius:10px;border:2px solid var(--red-mid);background:var(--red-light);color:var(--red);cursor:pointer;transition:all .15s;flex-shrink:0;}
-  .bunfin:hover{background:var(--red);color:#fff;}
+    .rl {
+      font-size: 34px;
+      animation: float 3s ease-in-out infinite;
+    }
 
-  /* TIMER */
-  .tbig{font-family:'Fredoka One',cursive;font-size:72px;color:var(--blue);text-align:center;line-height:1;padding:8px 0;transition:color .3s;}
-  .tbig.urgent{color:var(--red);animation:blink .6s infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
-  .tbtns{display:flex;gap:9px;flex-wrap:wrap;}
-  .btt{font-family:'Fredoka One',cursive;font-size:13px;padding:10px 14px;border-radius:11px;border:2px solid;cursor:pointer;transition:all .15s;}
-  .bstart{background:#D1FAE5;border-color:#6EE7B7;color:#059669;}
-  .bstart:hover{background:var(--green);color:#fff;}
-  .bpause{background:#FEF3C7;border-color:#FCD34D;color:var(--yellow);}
-  .bpause:hover{background:var(--yellow);color:#fff;}
-  .breset{background:var(--red-light);border-color:var(--red-mid);color:var(--red);}
-  .breset:hover{background:var(--red);color:#fff;}
-  .bexp{background:#F3E8FF;border-color:#C4B5FD;color:var(--purple);margin-left:auto;}
-  .bexp:hover{background:var(--purple);color:#fff;}
-  .srow{display:flex;gap:9px;align-items:center;margin-top:12px;}
-  .srow label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;white-space:nowrap;}
-  .srow input{width:75px;text-align:center;}
-  .bapply{font-family:'Fredoka One',cursive;font-size:12px;padding:8px 16px;border-radius:11px;background:var(--blue);color:#fff;border:2px solid var(--blue);cursor:pointer;}
-  .bapply:hover{background:#2563EB;}
+    @keyframes float {
 
-  /* LOG */
-  .logw{margin-top:12px;max-height:170px;overflow-y:auto;border-radius:11px;border:2px solid var(--border);}
-  .logw table{width:100%;border-collapse:collapse;font-size:11px;}
-  .logw th{font-weight:800;font-size:10px;color:var(--muted);background:#F8FAFF;border-bottom:2px solid var(--border);padding:6px 9px;text-align:left;text-transform:uppercase;}
-  .logw td{padding:5px 9px;border-bottom:1px solid #F1F5F9;}
-  .logw tr:last-child td{border-bottom:none;}
-  .rp{display:inline-block;font-family:'Fredoka One',cursive;font-size:12px;padding:2px 9px;border-radius:18px;}
-  .rk1{background:#FEF3C7;color:#D97706;border:2px solid #FCD34D;}
-  .rk2{background:#F1F5F9;color:#475569;border:2px solid #CBD5E1;}
-  .rk3{background:#FEF2F2;color:#B45309;border:2px solid #FCA5A5;}
-  .rko{background:#F0FDF4;color:#16A34A;border:2px solid #86EFAC;}
+      0%,
+      100% {
+        transform: translateY(0)
+      }
 
-  /* MEDIA SECTION */
-  .media-card{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow);border:2px solid var(--border);margin-bottom:16px;}
+      50% {
+        transform: translateY(-5px)
+      }
+    }
 
-  /* TAB SYSTEM */
-  .tabs{display:flex;gap:6px;margin-bottom:14px;background:#F1F5F9;border-radius:14px;padding:4px;}
-  .tab{font-family:'Fredoka One',cursive;font-size:13px;padding:7px 14px;border-radius:11px;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:transparent;flex:1;text-align:center;}
-  .tab.active{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+    h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 23px;
+      color: var(--blue);
+    }
 
-  /* Sponsor section inside tab */
-  .sp-type-head{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-  input[type="file"]{font-family:'Nunito',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;width:100%;}
-  .slist{display:flex;flex-direction:column;gap:7px;margin-top:9px;}
-  .sitem{display:flex;align-items:center;gap:9px;background:#F8FAFF;border:2px solid var(--border);border-radius:11px;padding:7px 11px;font-size:12px;}
-  .sitem img{height:34px;max-width:90px;object-fit:contain;border-radius:6px;}
-  .sitem span{flex:1;color:var(--muted);font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .rspon{background:var(--red-light);border:2px solid var(--red-mid);color:var(--red);font-size:10px;font-weight:800;padding:3px 7px;border-radius:7px;cursor:pointer;flex-shrink:0;}
-  .rspon:hover{background:var(--red);color:#fff;}
+    .sub {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
 
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-</style>
+    .live-badge {
+      margin-left: auto;
+      background: #DCFCE7;
+      border: 2px solid #86EFAC;
+      color: #16A34A;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .ld {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #16A34A;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.8)
+      }
+    }
+
+    .open-btn {
+      background: var(--blue);
+      color: #fff;
+      font-family: 'Fredoka One', cursive;
+      font-size: 13px;
+      padding: 9px 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, .35);
+    }
+
+    .open-btn:hover {
+      background: #2563EB;
+      transform: translateY(-2px);
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .st {
+      font-family: 'Fredoka One', cursive;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .fg label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      font-family: 'Nunito', sans-serif;
+      background: #F8FAFF;
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 11px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .13);
+    }
+
+    .rrow {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* TEAM POOL */
+    .team-pool {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .tr {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: #F8FAFF;
+      border: 2px solid var(--border);
+      border-radius: 13px;
+      padding: 9px 11px;
+      transition: border-color .2s;
+    }
+
+    .tr:hover {
+      border-color: var(--blue-mid);
+    }
+
+    .tcd {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ni {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 0;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: none;
+      color: var(--text);
+      outline: none;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .tit {
+      width: 48px;
+      height: 48px;
+      border-radius: 11px;
+      background: #F1F5F9;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: border-color .2s;
+      position: relative;
+    }
+
+    .tit:hover {
+      border-color: var(--blue);
+    }
+
+    .tit img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* float on preview */
+    .tit img {
+      animation: thumbFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes thumbFloat {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1)
+      }
+
+      50% {
+        transform: translateY(-4px) scale(1.04)
+      }
+    }
+
+    .tit .emoji-preview {
+      display: inline-block;
+      animation: thumbBob 2.8s ease-in-out infinite;
+    }
+
+    @keyframes thumbBob {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-5deg)
+      }
+
+      50% {
+        transform: translateY(-5px) rotate(5deg)
+      }
+    }
+
+    .ifi {
+      display: none;
+    }
+
+    .rmb {
+      background: var(--red-light);
+      border: 2px solid var(--red-mid);
+      color: var(--red);
+      border-radius: 8px;
+      width: 27px;
+      height: 27px;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+
+    .rmb:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .add-tb {
+      background: var(--green-light);
+      border: 2px dashed #86EFAC;
+      color: var(--green);
+      font-family: 'Fredoka One', cursive;
+      font-size: 13px;
+      padding: 9px;
+      border-radius: 13px;
+      cursor: pointer;
+      width: 100%;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .add-tb:hover {
+      background: #DCFCE7;
+      transform: translateY(-1px);
+    }
+
+    /* FINISH LIST */
+    .fl {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .ftr {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      background: #F8FAFF;
+      border: 2px solid var(--border);
+      border-radius: 13px;
+      padding: 9px 13px;
+      transition: all .3s;
+    }
+
+    .ftr.finished {
+      border-color: #FCD34D;
+      background: #FFFBEB;
+    }
+
+    .frank {
+      font-family: 'Fredoka One', cursive;
+      font-size: 20px;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .fimg {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #E2E8F0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      overflow: hidden;
+    }
+
+    .fimg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .fname {
+      flex: 1;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .ftime {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      min-width: 58px;
+      text-align: right;
+    }
+
+    .bfin {
+      font-family: 'Fredoka One', cursive;
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: 2px solid;
+      cursor: pointer;
+      transition: all .15s;
+      flex-shrink: 0;
+      background: #D1FAE5;
+      border-color: #6EE7B7;
+      color: #059669;
+    }
+
+    .bfin:hover {
+      background: var(--green);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    .bfin:disabled {
+      background: #F1F5F9;
+      border-color: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .bunfin {
+      font-family: 'Fredoka One', cursive;
+      font-size: 11px;
+      padding: 6px 11px;
+      border-radius: 10px;
+      border: 2px solid var(--red-mid);
+      background: var(--red-light);
+      color: var(--red);
+      cursor: pointer;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+
+    .bunfin:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* TIMER */
+    .tbig {
+      font-family: 'Fredoka One', cursive;
+      font-size: 72px;
+      color: var(--blue);
+      text-align: center;
+      line-height: 1;
+      padding: 8px 0;
+      transition: color .3s;
+    }
+
+    .tbig.urgent {
+      color: var(--red);
+      animation: blink .6s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    .tbtns {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .btt {
+      font-family: 'Fredoka One', cursive;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 11px;
+      border: 2px solid;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .bstart {
+      background: #D1FAE5;
+      border-color: #6EE7B7;
+      color: #059669;
+    }
+
+    .bstart:hover {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .bpause {
+      background: #FEF3C7;
+      border-color: #FCD34D;
+      color: var(--yellow);
+    }
+
+    .bpause:hover {
+      background: var(--yellow);
+      color: #fff;
+    }
+
+    .breset {
+      background: var(--red-light);
+      border-color: var(--red-mid);
+      color: var(--red);
+    }
+
+    .breset:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .bexp {
+      background: #F3E8FF;
+      border-color: #C4B5FD;
+      color: var(--purple);
+      margin-left: auto;
+    }
+
+    .bexp:hover {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .srow {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .srow label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .srow input {
+      width: 75px;
+      text-align: center;
+    }
+
+    .bapply {
+      font-family: 'Fredoka One', cursive;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 11px;
+      background: var(--blue);
+      color: #fff;
+      border: 2px solid var(--blue);
+      cursor: pointer;
+    }
+
+    .bapply:hover {
+      background: #2563EB;
+    }
+
+    /* LOG */
+    .logw {
+      margin-top: 12px;
+      max-height: 170px;
+      overflow-y: auto;
+      border-radius: 11px;
+      border: 2px solid var(--border);
+    }
+
+    .logw table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .logw th {
+      font-weight: 800;
+      font-size: 10px;
+      color: var(--muted);
+      background: #F8FAFF;
+      border-bottom: 2px solid var(--border);
+      padding: 6px 9px;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .logw td {
+      padding: 5px 9px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+
+    .logw tr:last-child td {
+      border-bottom: none;
+    }
+
+    .rp {
+      display: inline-block;
+      font-family: 'Fredoka One', cursive;
+      font-size: 12px;
+      padding: 2px 9px;
+      border-radius: 18px;
+    }
+
+    .rk1 {
+      background: #FEF3C7;
+      color: #D97706;
+      border: 2px solid #FCD34D;
+    }
+
+    .rk2 {
+      background: #F1F5F9;
+      color: #475569;
+      border: 2px solid #CBD5E1;
+    }
+
+    .rk3 {
+      background: #FEF2F2;
+      color: #B45309;
+      border: 2px solid #FCA5A5;
+    }
+
+    .rko {
+      background: #F0FDF4;
+      color: #16A34A;
+      border: 2px solid #86EFAC;
+    }
+
+    /* MEDIA SECTION */
+    .media-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    /* TAB SYSTEM */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      background: #F1F5F9;
+      border-radius: 14px;
+      padding: 4px;
+    }
+
+    .tab {
+      font-family: 'Fredoka One', cursive;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: all .2s;
+      color: var(--muted);
+      border: none;
+      background: transparent;
+      flex: 1;
+      text-align: center;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Sponsor section inside tab */
+    .sp-type-head {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    input[type="file"] {
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .slist {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 9px;
+    }
+
+    .sitem {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: #F8FAFF;
+      border: 2px solid var(--border);
+      border-radius: 11px;
+      padding: 7px 11px;
+      font-size: 12px;
+    }
+
+    .sitem img {
+      height: 34px;
+      max-width: 90px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .sitem span {
+      flex: 1;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rspon {
+      background: var(--red-light);
+      border: 2px solid var(--red-mid);
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 7px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .rspon:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+  </style>
   </head>
+
   <body>
 
     <!-- HEADER -->
     <div class="header">
       <div class="rl">🤖</div>
-      <div><h1>RoboRace Control</h1><div class="sub">Finish Order Tracker ·
-          Operator Panel</div></div>
-      <div class="live-badge"><div class="ld"></div> LIVE</div>
+      <div>
+        <h1>RoboRace Control</h1>
+        <div class="sub">Finish Order Tracker ·
+          Operator Panel</div>
+      </div>
+      <div class="live-badge">
+        <div class="ld"></div> LIVE
+      </div>
       <button class="open-btn" onclick="openDisplay()">🖥 Open Display</button>
     </div>
 
@@ -148,10 +803,11 @@
       <div class="st">🏆 Round Info</div>
       <div class="rrow">
         <div class="fg"><label>Event Name</label><input type="text"
-            id="eventName" value="Robot Think 2026" oninput="send()"
-            style="width:190px;"></div>
+            id="eventName" value="Robot Think 2026"
+            oninput="send()" style="width:190px;"></div>
         <div class="fg"><label>Round #</label><input type="number" id="roundNum"
-            value="1" min="1" style="width:70px;" oninput="send()"></div>
+            value="1" min="1" style="width:70px;"
+            oninput="send()"></div>
         <div class="fg"><label>Round Label</label><input type="text"
             id="roundLabel" value="Qualifying" oninput="send()"
             style="width:140px;"></div>
@@ -193,11 +849,23 @@
       </div>
       <div class="logw">
         <table>
-          <thead><tr><th>Round</th><th>Rank</th><th>Team</th><th>Finish
-                Time</th><th>Clock</th></tr></thead>
-          <tbody id="logBody"><tr><td colspan="5"
+          <thead>
+            <tr>
+              <th>Round</th>
+              <th>Rank</th>
+              <th>Team</th>
+              <th>Finish
+                Time</th>
+              <th>Clock</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr>
+              <td colspan="5"
                 style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖
-                No finishes yet</td></tr></tbody>
+                No finishes yet</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -247,204 +915,205 @@
     </div>
 
     <script>
-let displayWindow=null;
-function openDisplay(){displayWindow=window.open("display.html","display","width=1280,height=800");setTimeout(send,900);}
+    let displayWindow = null;
+    function openDisplay() { displayWindow = window.open("display.html", "display", "width=1280,height=800"); setTimeout(send, 900); }
 
-// Tabs
-function switchTab(name){
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['bg','title','sponsor','partner'];
-    t.classList.toggle('active',names[i]===name);
-  });
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-}
+    // Tabs
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        const names = ['bg', 'title', 'sponsor', 'partner'];
+        t.classList.toggle('active', names[i] === name);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+    }
 
-const COLORS=['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6'];
-const EMOJIS=['🤖','👾','🦾','🧠','⚙️'];
-const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣'];
+    const COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6'];
+    const EMOJIS = ['🤖', '👾', '🦾', '🧠', '⚙️'];
+    const MEDALS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
 
-let teams=[{id:1,name:"Team Alpha",img:null},{id:2,name:"Team Beta",img:null}];
-let nextId=3;
-let finishOrder=[],finishTimes={},finishClocks={};
-let logRows=[];
-let timerRunning=false,timerStarted=false,totalSecs=600,timerInterval=null;
+    let teams = [{ id: 1, name: "Team Alpha", img: null }, { id: 2, name: "Team Beta", img: null }];
+    let nextId = 3;
+    let finishOrder = [], finishTimes = {}, finishClocks = {};
+    let logRows = [];
+    let timerRunning = false, timerStarted = false, totalSecs = 600, timerInterval = null;
 
-// ── TEAM POOL ──
-function renderTeamPool(){
-  const pool=document.getElementById('teamPool');
-  pool.innerHTML='';
-  teams.forEach((t,i)=>{
-    const div=document.createElement('div');div.className='tr';
-    div.innerHTML=`
-      <div class="tit" onclick="document.getElementById('ifi_${t.id}').click()" style="border-color:${COLORS[i%COLORS.length]}50" title="Click to upload image">
+    // ── TEAM POOL ──
+    function renderTeamPool() {
+      const pool = document.getElementById('teamPool');
+      pool.innerHTML = '';
+      teams.forEach((t, i) => {
+        const div = document.createElement('div'); div.className = 'tr';
+        div.innerHTML = `
+      <div class="tit" onclick="document.getElementById('ifi_${t.id}').click()" style="border-color:${COLORS[i % COLORS.length]}50" title="Click to upload image">
         ${t.img
-          ?`<img src="${t.img}">`
-          :`<span class="emoji-preview">${EMOJIS[i%EMOJIS.length]}</span>`}
+            ? `<img src="${t.img}">`
+            : `<span class="emoji-preview">${EMOJIS[i % EMOJIS.length]}</span>`}
       </div>
       <input type="file" accept="image/*" class="ifi" id="ifi_${t.id}" onchange="handleImg(${t.id},this)">
-      <div class="tcd" style="background:${COLORS[i%COLORS.length]}"></div>
+      <div class="tcd" style="background:${COLORS[i % COLORS.length]}"></div>
       <input class="ni" type="text" value="${t.name}" oninput="updateTName(${t.id},this.value)">
-      ${teams.length>2?`<button class="rmb" onclick="removeTeam(${t.id})">✕</button>`:''}
+      ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${t.id})">✕</button>` : ''}
     `;
-    pool.appendChild(div);
-  });
-  document.getElementById('addTeamBtn').style.display=teams.length>=5?'none':'flex';
-  renderFinishList();send();
-}
+        pool.appendChild(div);
+      });
+      document.getElementById('addTeamBtn').style.display = teams.length >= 5 ? 'none' : 'flex';
+      renderFinishList(); send();
+    }
 
-function handleImg(id,input){
-  const f=input.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{const t=teams.find(t=>t.id===id);if(t){t.img=r.result;renderTeamPool();}};
-  r.readAsDataURL(f);
-}
-function updateTName(id,n){const t=teams.find(t=>t.id===id);if(t){t.name=n;renderFinishList();send();}}
-function addTeam(){if(teams.length>=5)return;teams.push({id:nextId++,name:`Team ${String.fromCharCode(64+teams.length+1)}`,img:null});renderTeamPool();}
-function removeTeam(id){
-  teams=teams.filter(t=>t.id!==id);
-  finishOrder=finishOrder.filter(f=>f!==id);
-  delete finishTimes[id];delete finishClocks[id];
-  renderTeamPool();
-}
+    function handleImg(id, input) {
+      const f = input.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { const t = teams.find(t => t.id === id); if (t) { t.img = r.result; renderTeamPool(); } };
+      r.readAsDataURL(f);
+    }
+    function updateTName(id, n) { const t = teams.find(t => t.id === id); if (t) { t.name = n; renderFinishList(); send(); } }
+    function addTeam() { if (teams.length >= 5) return; teams.push({ id: nextId++, name: `Team ${String.fromCharCode(64 + teams.length + 1)}`, img: null }); renderTeamPool(); }
+    function removeTeam(id) {
+      teams = teams.filter(t => t.id !== id);
+      finishOrder = finishOrder.filter(f => f !== id);
+      delete finishTimes[id]; delete finishClocks[id];
+      renderTeamPool();
+    }
 
-// ── FINISH LIST ──
-function renderFinishList(){
-  const list=document.getElementById('finishList');list.innerHTML='';
-  teams.forEach((t,i)=>{
-    const rank=finishOrder.indexOf(t.id);const finished=rank!==-1;
-    const div=document.createElement('div');div.className='ftr'+(finished?' finished':'');
-    div.innerHTML=`
-      <div class="frank">${finished?MEDALS[rank]:'·'}</div>
-      <div class="fimg">${t.img?`<img src="${t.img}">`:`<span>${EMOJIS[i%EMOJIS.length]}</span>`}</div>
-      <div class="fname" style="color:${COLORS[i%COLORS.length]}">${t.name}</div>
-      <div class="ftime">${finished?'⏱ '+finishTimes[t.id]:''}</div>
+    // ── FINISH LIST ──
+    function renderFinishList() {
+      const list = document.getElementById('finishList'); list.innerHTML = '';
+      teams.forEach((t, i) => {
+        const rank = finishOrder.indexOf(t.id); const finished = rank !== -1;
+        const div = document.createElement('div'); div.className = 'ftr' + (finished ? ' finished' : '');
+        div.innerHTML = `
+      <div class="frank">${finished ? MEDALS[rank] : '·'}</div>
+      <div class="fimg">${t.img ? `<img src="${t.img}">` : `<span>${EMOJIS[i % EMOJIS.length]}</span>`}</div>
+      <div class="fname" style="color:${COLORS[i % COLORS.length]}">${t.name}</div>
+      <div class="ftime">${finished ? '⏱ ' + finishTimes[t.id] : ''}</div>
       ${finished
-        ?`<button class="bunfin" onclick="unfinish(${t.id})">↺ Undo</button>`
-        :`<button class="bfin" onclick="markFinish(${t.id})" ${!timerStarted?'disabled':''}>🏁 Finish!</button>`}
+            ? `<button class="bunfin" onclick="unfinish(${t.id})">↺ Undo</button>`
+            : `<button class="bfin" onclick="markFinish(${t.id})" ${!timerStarted ? 'disabled' : ''}>🏁 Finish!</button>`}
     `;
-    list.appendChild(div);
-  });
-}
-function markFinish(id){
-  if(finishOrder.includes(id))return;
-  finishOrder.push(id);finishTimes[id]=document.getElementById('timerDisplay').textContent;
-  finishClocks[id]=new Date().toLocaleTimeString();
-  const t=teams.find(t=>t.id===id);const rank=finishOrder.length;
-  logRows.push({round:`Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`,rank,team:t?t.name:'?',finishTime:finishTimes[id],clock:finishClocks[id]});
-  renderFinishList();renderLog();send();
-}
-function unfinish(id){
-  const t=teams.find(t=>t.id===id);
-  const rs=`Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`;
-  logRows=logRows.filter(r=>!(r.team===(t?t.name:'?')&&r.round===rs));
-  finishOrder=finishOrder.filter(f=>f!==id);delete finishTimes[id];delete finishClocks[id];
-  renderFinishList();renderLog();send();
-}
-function renderLog(){
-  const tb=document.getElementById('logBody');
-  if(!logRows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';return;}
-  const rc=r=>r===1?'rk1':r===2?'rk2':r===3?'rk3':'rko';
-  tb.innerHTML=[...logRows].reverse().map(r=>`<tr><td style="font-weight:700;font-size:10px;color:var(--muted)">${r.round}</td><td><span class="rp ${rc(r.rank)}">${MEDALS[r.rank-1]} #${r.rank}</span></td><td style="font-weight:800">${r.team}</td><td style="font-weight:700">${r.finishTime}</td><td style="color:var(--muted)">${r.clock}</td></tr>`).join('');
-}
+        list.appendChild(div);
+      });
+    }
+    function markFinish(id) {
+      if (finishOrder.includes(id)) return;
+      finishOrder.push(id); finishTimes[id] = document.getElementById('timerDisplay').textContent;
+      finishClocks[id] = new Date().toLocaleTimeString();
+      const t = teams.find(t => t.id === id); const rank = finishOrder.length;
+      logRows.push({ round: `Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`, rank, team: t ? t.name : '?', finishTime: finishTimes[id], clock: finishClocks[id] });
+      renderFinishList(); renderLog(); send();
+    }
+    function unfinish(id) {
+      const t = teams.find(t => t.id === id);
+      const rs = `Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`;
+      logRows = logRows.filter(r => !(r.team === (t ? t.name : '?') && r.round === rs));
+      finishOrder = finishOrder.filter(f => f !== id); delete finishTimes[id]; delete finishClocks[id];
+      renderFinishList(); renderLog(); send();
+    }
+    function renderLog() {
+      const tb = document.getElementById('logBody');
+      if (!logRows.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>'; return; }
+      const rc = r => r === 1 ? 'rk1' : r === 2 ? 'rk2' : r === 3 ? 'rk3' : 'rko';
+      tb.innerHTML = [...logRows].reverse().map(r => `<tr><td style="font-weight:700;font-size:10px;color:var(--muted)">${r.round}</td><td><span class="rp ${rc(r.rank)}">${MEDALS[r.rank - 1]} #${r.rank}</span></td><td style="font-weight:800">${r.team}</td><td style="font-weight:700">${r.finishTime}</td><td style="color:var(--muted)">${r.clock}</td></tr>`).join('');
+    }
 
-// ── TIMER ──
-function updateTimerUI(){
-  const m=Math.floor(totalSecs/60),s=totalSecs%60;
-  document.getElementById('timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  document.getElementById('timerDisplay').classList.toggle('urgent',totalSecs<=30);send();
-}
-function startTimer(){if(timerInterval)return;timerRunning=true;timerStarted=true;timerInterval=setInterval(()=>{if(totalSecs<=0){clearInterval(timerInterval);timerInterval=null;timerRunning=false;return;}totalSecs--;updateTimerUI();},1000);renderFinishList();}
-function pauseTimer(){if(!timerInterval)return;clearInterval(timerInterval);timerInterval=null;timerRunning=false;}
-function applyTimer(){totalSecs=(parseInt(document.getElementById('minutesInput').value)||10)*60;updateTimerUI();}
-function resetRound(){
-  pauseTimer();timerStarted=false;
-  totalSecs=(parseInt(document.getElementById('minutesInput').value)||10)*60;
-  finishOrder=[];finishTimes={};finishClocks={};
-  updateTimerUI();renderFinishList();
-}
-function exportExcel(){
-  const header=[['Round','Rank','Team','Finish Time (Timer)','Clock Time']];
-  const rows=logRows.map(r=>[r.round,`#${r.rank}`,r.team,r.finishTime,r.clock]);
-  const ws=XLSX.utils.aoa_to_sheet([...header,...rows]);
-  ws['!cols']=[{wch:24},{wch:6},{wch:20},{wch:18},{wch:12}];
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Results');
-  XLSX.writeFile(wb,`RoboRace_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
+    // ── TIMER ──
+    function updateTimerUI() {
+      const m = Math.floor(totalSecs / 60), s = totalSecs % 60;
+      document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      document.getElementById('timerDisplay').classList.toggle('urgent', totalSecs <= 30); send();
+    }
+    function startTimer() { if (timerInterval) return; timerRunning = true; timerStarted = true; timerInterval = setInterval(() => { if (totalSecs <= 0) { clearInterval(timerInterval); timerInterval = null; timerRunning = false; return; } totalSecs--; updateTimerUI(); }, 1000); renderFinishList(); }
+    function pauseTimer() { if (!timerInterval) return; clearInterval(timerInterval); timerInterval = null; timerRunning = false; }
+    function applyTimer() { totalSecs = (parseInt(document.getElementById('minutesInput').value) || 10) * 60; updateTimerUI(); }
+    function resetRound() {
+      pauseTimer(); timerStarted = false;
+      totalSecs = (parseInt(document.getElementById('minutesInput').value) || 10) * 60;
+      finishOrder = []; finishTimes = {}; finishClocks = {};
+      updateTimerUI(); renderFinishList();
+    }
+    function exportExcel() {
+      const header = [['Round', 'Rank', 'Team', 'Finish Time (Timer)', 'Clock Time']];
+      const rows = logRows.map(r => [r.round, `#${r.rank}`, r.team, r.finishTime, r.clock]);
+      const ws = XLSX.utils.aoa_to_sheet([...header, ...rows]);
+      ws['!cols'] = [{ wch: 24 }, { wch: 6 }, { wch: 20 }, { wch: 18 }, { wch: 12 }];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Results');
+      XLSX.writeFile(wb, `RoboRace_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
 
-// ── MEDIA ──
-let bg='';
-let titleSponsors=[],sponsors=[],partners=[];
+    // ── MEDIA ──
+    let bg = '';
+    let titleSponsors = [], sponsors = [], partners = [];
 
-document.getElementById('backgroundInput').onchange=e=>{
-  const r=new FileReader();r.onload=()=>{bg=r.result;send();};r.readAsDataURL(e.target.files[0]);
-};
+    document.getElementById('backgroundInput').onchange = e => {
+      const r = new FileReader(); r.onload = () => { bg = r.result; send(); }; r.readAsDataURL(e.target.files[0]);
+    };
 
-function makeFileHandler(inputId,arr,listId){
-  document.getElementById(inputId).onchange=e=>{
-    const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=()=>{arr.push({id:Date.now(),src:r.result,name:f.name});renderSponsorList(arr,listId);send();};
-    r.readAsDataURL(f);e.target.value='';
-  };
-}
-makeFileHandler('titleInput',titleSponsors,'titleList');
-makeFileHandler('sponsorInput',sponsors,'sponsorList');
-makeFileHandler('partnerInput',partners,'partnerList');
+    function makeFileHandler(inputId, arr, listId) {
+      document.getElementById(inputId).onchange = e => {
+        const f = e.target.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = () => { arr.push({ id: Date.now(), src: r.result, name: f.name }); renderSponsorList(arr, listId); send(); };
+        r.readAsDataURL(f); e.target.value = '';
+      };
+    }
+    makeFileHandler('titleInput', titleSponsors, 'titleList');
+    makeFileHandler('sponsorInput', sponsors, 'sponsorList');
+    makeFileHandler('partnerInput', partners, 'partnerList');
 
-function removeFrom(arr,id,listId){
-  const i=arr.findIndex(s=>s.id===id);if(i>=0)arr.splice(i,1);
-  renderSponsorList(arr,listId);send();
-}
-function renderSponsorList(arr,listId){
-  document.getElementById(listId).innerHTML=arr.map(s=>`
+    function removeFrom(arr, id, listId) {
+      const i = arr.findIndex(s => s.id === id); if (i >= 0) arr.splice(i, 1);
+      renderSponsorList(arr, listId); send();
+    }
+    function renderSponsorList(arr, listId) {
+      document.getElementById(listId).innerHTML = arr.map(s => `
     <div class="sitem">
       <img src="${s.src}"><span>${s.name}</span>
-      <button class="rspon" onclick="removeFrom(${listId==='titleList'?'titleSponsors':listId==='sponsorList'?'sponsors':'partners'},${s.id},'${listId}')">✕</button>
+      <button class="rspon" onclick="removeFrom(${listId === 'titleList' ? 'titleSponsors' : listId === 'sponsorList' ? 'sponsors' : 'partners'},${s.id},'${listId}')">✕</button>
     </div>`).join('');
-}
-// Fix: pass the actual array reference via closure
-function removeFrom(arr,id,listId){
-  const idx=arr.findIndex(s=>s.id===id);if(idx>=0)arr.splice(idx,1);
-  renderSponsorList(arr,listId);send();
-}
-// Need global remove handlers
-window.removeTitleSponsor=id=>{const i=titleSponsors.findIndex(s=>s.id===id);if(i>=0)titleSponsors.splice(i,1);renderSponsorList(titleSponsors,'titleList');send();}
-window.removeSponsor=id=>{const i=sponsors.findIndex(s=>s.id===id);if(i>=0)sponsors.splice(i,1);renderSponsorList(sponsors,'sponsorList');send();}
-window.removePartner=id=>{const i=partners.findIndex(s=>s.id===id);if(i>=0)partners.splice(i,1);renderSponsorList(partners,'partnerList');send();}
+    }
+    // Fix: pass the actual array reference via closure
+    function removeFrom(arr, id, listId) {
+      const idx = arr.findIndex(s => s.id === id); if (idx >= 0) arr.splice(idx, 1);
+      renderSponsorList(arr, listId); send();
+    }
+    // Need global remove handlers
+    window.removeTitleSponsor = id => { const i = titleSponsors.findIndex(s => s.id === id); if (i >= 0) titleSponsors.splice(i, 1); renderSponsorList(titleSponsors, 'titleList'); send(); }
+    window.removeSponsor = id => { const i = sponsors.findIndex(s => s.id === id); if (i >= 0) sponsors.splice(i, 1); renderSponsorList(sponsors, 'sponsorList'); send(); }
+    window.removePartner = id => { const i = partners.findIndex(s => s.id === id); if (i >= 0) partners.splice(i, 1); renderSponsorList(partners, 'partnerList'); send(); }
 
-// Override renderSponsorList to use correct remove fn
-function renderSponsorList(arr,listId){
-  const removeFn=listId==='titleList'?'removeTitleSponsor':listId==='sponsorList'?'removeSponsor':'removePartner';
-  document.getElementById(listId).innerHTML=arr.map(s=>`
+    // Override renderSponsorList to use correct remove fn
+    function renderSponsorList(arr, listId) {
+      const removeFn = listId === 'titleList' ? 'removeTitleSponsor' : listId === 'sponsorList' ? 'removeSponsor' : 'removePartner';
+      document.getElementById(listId).innerHTML = arr.map(s => `
     <div class="sitem">
       <img src="${s.src}"><span>${s.name}</span>
       <button class="rspon" onclick="${removeFn}(${s.id})">✕</button>
     </div>`).join('');
-}
+    }
 
-// ── SEND ──
-function send(){
-  if(!displayWindow)return;
-  displayWindow.postMessage({
-    teams:teams.map((t,i)=>({
-      id:t.id,name:t.name,img:t.img,
-      color:COLORS[i%COLORS.length],emoji:EMOJIS[i%EMOJIS.length],
-      rank:finishOrder.includes(t.id)?finishOrder.indexOf(t.id)+1:null,
-      finishTime:finishTimes[t.id]||null
-    })),
-    finishOrder,
-    timer:document.getElementById('timerDisplay').textContent,
-    timerUrgent:totalSecs<=30,
-    eventName:document.getElementById('eventName').value,
-    roundNum:document.getElementById('roundNum').value,
-    roundLabel:document.getElementById('roundLabel').value,
-    background:bg,
-    titleSponsors,sponsors,partners
-  },'*');
-}
+    // ── SEND ──
+    function send() {
+      if (!displayWindow) return;
+      displayWindow.postMessage({
+        teams: teams.map((t, i) => ({
+          id: t.id, name: t.name, img: t.img,
+          color: COLORS[i % COLORS.length], emoji: EMOJIS[i % EMOJIS.length],
+          rank: finishOrder.includes(t.id) ? finishOrder.indexOf(t.id) + 1 : null,
+          finishTime: finishTimes[t.id] || null
+        })),
+        finishOrder,
+        timer: document.getElementById('timerDisplay').textContent,
+        timerUrgent: totalSecs <= 30,
+        eventName: document.getElementById('eventName').value,
+        roundNum: document.getElementById('roundNum').value,
+        roundLabel: document.getElementById('roundLabel').value,
+        background: bg,
+        titleSponsors, sponsors, partners
+      }, '*');
+    }
 
-renderTeamPool();updateTimerUI();
-</script>
+    renderTeamPool(); updateTimerUI();
+  </script>
   </body>
+
 </html>

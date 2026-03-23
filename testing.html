@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Arduino Test</title>
+        <script src="/socket.io/socket.io.js"></script>
+
+        <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #F07900;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      width: 250px;
+      margin: 20px auto;
+    }
+
+    .status {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+
+    .on {
+      color: #22c55e;
+    }
+
+    .off {
+      color: red;
+    }
+  </style>
+    </head>
+
+    <body>
+
+        <h1>🔌 Arduino Test</h1>
+
+        <!-- Connection -->
+        <div class="card">
+            <h3>Connection</h3>
+            <div id="connection" class="status off">🔴 Disconnected</div>
+        </div>
+
+        <!-- Button State -->
+        <div class="card">
+            <h3>Button State</h3>
+            <div id="btnState" class="status off">OFF</div>
+        </div>
+
+        <script>
+    const socket = io()
+
+    // Arduino connection status
+    socket.on("arduino-status", (isConnected) => {
+      const el = document.getElementById("connection")
+
+      if (isConnected) {
+        el.innerText = "🟢 Connected"
+        el.className = "status on"
+      } else {
+        el.innerText = "🔴 Disconnected"
+        el.className = "status off"
+      }
+    })
+
+    // Button ON/OFF from Arduino
+    socket.on("update", (state) => {
+      const el = document.getElementById("btnState")
+
+      if (state) {
+        el.innerText = "ON"
+        el.className = "status on"
+      } else {
+        el.innerText = "OFF"
+        el.className = "status off"
+      }
+    })
+  </script>
+
+    </body>
+</html>
