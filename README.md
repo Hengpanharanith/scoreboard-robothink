@@ -1,314 +1,94 @@
-# Scoreboard System – Project Flow
+﻿# RoboThink Scoreboard
 
-## Overview
+Real-time scoreboard system for RoboThink events with:
+- Control panel for operator actions
+- Live display page for audience/projector
+- Optional Arduino serial input for hardware button state
 
-This project is a **real-time tournament scoreboard system** with a **control panel**, **display screen**, and optional **Arduino emergency button control**.
+## Current Architecture
 
-The system allows an operator to control:
+Arduino -> SerialPort (USB/COM) -> Node.js server -> Socket.IO -> Browser UIs
 
-* Team names
-* Scores
-* Timer (start / pause / reset)
-* Team logos
-* Background image
-* Sponsor logos
+The Node server is the central hub that:
+- Serves static files from this folder
+- Reads Arduino serial data
+- Broadcasts live events to connected pages
 
-The display screen updates **live in real time**.
+## Project Structure (Current)
 
----
-
-# System Architecture
-
-```
-Arduino Button
-      │
-      │ Serial (USB)
-      ▼
-Node.js Server
-      │
-      │ WebSocket (Socket.IO)
-      ▼
-Control Screen (Browser)
-      │
-      ▼
-Display Screen (Browser / Projector)
+```text
+scoreboard-robothink/
+|- server.js
+|- package.json
+|- package-lock.json
+|- index.html         # Main control panel
+|- display.html       # Audience display screen
+|- testing.html       # Arduino/socket status test page
+|- sponsor_logo/      # Sponsor images
+|- push_button/       # Arduino/button related assets
+|- README.md
 ```
 
----
+## Features
 
-# Project Structure
+### Control panel (index.html)
+- Edit event and round info
+- Manage teams (2-5), names, and robot images
+- Mark finish order and export results to XLS
+- Timer controls (start/pause/reset/custom minutes)
+- Background upload and sponsor/partner logo uploads
+- Open live display window
 
-```
-scoreboard-system
-│
-├── server.js              # Node.js backend server
-├── package.json           # Node dependencies
-├── .gitignore             # Ignore node_modules
-│
-├── public
-│   ├── control.html       # Operator control panel
-│   └── display.html       # Audience display screen
-│
-├── arduino
-│   └── emergency_button.ino
-│
-└── README.md
-```
+### Display screen (display.html)
+- Shows event/round, teams, finish ranks, timer, and uploaded media
+- Receives updates in real time from the control panel data stream
 
----
+### Arduino test page (testing.html)
+- Shows Arduino connection status (`arduino-status`)
+- Shows button state (`update`)
+- Useful for validating serial-to-UI flow quickly
 
-# Components
+### Server (server.js)
+- Express static file hosting
+- Socket.IO real-time messaging
+- SerialPort integration on `COM3` at `9600` baud
+- Auto reconnect after Arduino restart/disconnect (no Node restart required)
 
-## 1. Node.js Server
+## Run
 
-The Node.js server acts as the **central communication hub**.
+1. Install dependencies
 
-Responsibilities:
-
-* Serve HTML files
-* Connect to Arduino via **SerialPort**
-* Broadcast real-time events via **Socket.IO**
-* Synchronize control and display screens
-
-Technologies:
-
-* Express
-* Socket.IO
-* SerialPort
-
----
-
-## 2. Control Screen (Operator Panel)
-
-The control interface allows the operator to manage the scoreboard.
-
-Features:
-
-* Edit team names
-* Upload team logos
-* Increase / decrease score
-* Start / pause / reset timer
-* Upload background image
-* Upload sponsor logos
-* Open display screen
-
-When changes occur, the control panel sends updates to the server:
-
-```
-Control Panel
-      │
-      ▼
-Socket.IO emit
-      │
-      ▼
-Node Server
-      │
-      ▼
-Broadcast update
-      │
-      ▼
-Display Screen
+```bash
+npm install
 ```
 
----
+2. Start server
 
-## 3. Display Screen (Audience Screen)
-
-The display screen shows the scoreboard to the audience or projector.
-
-Displayed elements:
-
-* Team names
-* Team logos
-* Scores
-* Game timer
-* Sponsor logos
-* Background image
-
-This screen **listens for real-time updates** from the Node server.
-
----
-
-## 4. Arduino Emergency Button
-
-The Arduino provides **hardware control** for critical functions like timer control.
-
-Example usage:
-
-* Start timer
-* Pause timer
-* Reset timer
-
-Workflow:
-
-```
-Button Press
-     │
-     ▼
-Arduino
-     │
-Serial message
-     │
-     ▼
-Node.js SerialPort
-     │
-     ▼
-WebSocket event
-     │
-     ▼
-Control Panel Timer Function
-```
-
-Example command from Arduino:
-
-```
-START
-PAUSE
-RESET
-TEAM_A_PLUS
-TEAM_B_PLUS
-```
-
----
-
-# Runtime Flow
-
-## Application Startup
-
-1. Start Node server
-
-```
+```bash
 npm start
 ```
 
-2. Server starts on:
+3. Open pages
 
-```
-http://localhost:3000
-```
+- Control: http://localhost:8888/index.html
+- Display: http://localhost:8888/display.html
+- Arduino test: http://localhost:8888/testing.html
 
-3. Open control panel
+## Socket Events Used
 
-```
-http://localhost:3000/control.html
-```
+- `arduino-status` -> `true/false` connection state
+- `update` -> button state boolean
+- `toggle` -> frontend/manual state push (rebroadcast as `update`)
 
-4. Operator opens display screen.
+## Arduino Serial Notes
 
----
+`server.js` maps these incoming serial values:
+- ON values: `1`, `ON`, `HIGH`, `PRESSED`, `TRUE`
+- OFF values: `0`, `OFF`, `LOW`, `RELEASED`, `FALSE`
 
-# Score Update Flow
+If the Arduino is not on `COM3`, update `SERIAL_PATH` in `server.js`.
 
-```
-Operator clicks +1
-        │
-        ▼
-Control Panel
-        │
-Socket.IO emit
-        │
-        ▼
-Node Server
-        │
-Broadcast update
-        │
-        ▼
-Display Screen updates score
-```
+## Dev Notes
 
----
-
-# Timer Control Flow
-
-```
-Start Button
-     │
-     ▼
-Control Panel Timer
-     │
-Emit timer state
-     │
-     ▼
-Node Server
-     │
-Broadcast
-     │
-     ▼
-Display Screen timer updates
-```
-
----
-
-# Arduino Emergency Button Flow
-
-```
-Emergency Button Press
-        │
-        ▼
-Arduino detects input
-        │
-Serial.println("PAUSE")
-        │
-        ▼
-Node SerialPort receives message
-        │
-        ▼
-Socket.IO event emitted
-        │
-        ▼
-Control Panel executes pauseTimer()
-        │
-        ▼
-Display screen updates
-```
-
----
-
-# Development Workflow
-
-Start development server:
-
-```
-npm start
-```
-
-Open browser:
-
-```
-http://localhost:3000/control.html
-```
-
-Edit code → refresh browser.
-
-For automatic restart during development:
-
-```
-nodemon server.js
-```
-
----
-
-# Future Improvements
-
-Possible upgrades for the system:
-
-* Animated scoreboard transitions
-* Sponsor logo carousel
-* Wireless Arduino buttons
-* Keyboard shortcuts for operator
-* OBS streaming overlay
-* Multi-display support
-* Tournament round management
-
----
-
-# Summary
-
-This project creates a **professional real-time tournament scoreboard system** with:
-
-* Web-based control panel
-* Real-time audience display
-* Hardware emergency control
-* Node.js communication layer
-
-The architecture allows the system to scale for **live events, tournaments, and competitions**.
+- This project currently serves files from the root folder using `express.static(__dirname)`.
+- If you later move files into a `public/` folder, update static path and README links accordingly.
