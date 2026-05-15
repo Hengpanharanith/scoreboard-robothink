@@ -1,9 +1,9 @@
-﻿const express = require("express")
+﻿let displayData = {}
+const express = require("express")
 const http = require("http")
 const { Server } = require("socket.io")
 const { SerialPort } = require("serialport")
 const { ReadlineParser } = require("@serialport/parser-readline")
-
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
@@ -66,6 +66,14 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User disconnected")
   })
+  // send current display data when new client connects (important for OBS)
+socket.emit("display-update", displayData)
+
+// receive updates from control
+socket.on("display-update", (data) => {
+  displayData = data
+  io.emit("display-update", data)
+})
 })
 
 port.on("open", () => {

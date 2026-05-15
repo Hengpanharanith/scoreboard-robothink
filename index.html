@@ -10,6 +10,7 @@
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+      
     :root {
       --blue: #3B82F6;
       --blue-light: #EFF6FF;
@@ -781,7 +782,7 @@
     }
   </style>
   </head>
-
+  <script src="/socket.io/socket.io.js"></script>
   <body>
 
     <!-- HEADER -->
@@ -1091,29 +1092,37 @@
     </div>`).join('');
     }
 
-    // ── SEND ──
-    function send() {
-      if (!displayWindow) return;
-      displayWindow.postMessage({
-        teams: teams.map((t, i) => ({
-          id: t.id, name: t.name, img: t.img,
-          color: COLORS[i % COLORS.length], emoji: EMOJIS[i % EMOJIS.length],
-          rank: finishOrder.includes(t.id) ? finishOrder.indexOf(t.id) + 1 : null,
-          finishTime: finishTimes[t.id] || null
-        })),
-        finishOrder,
-        timer: document.getElementById('timerDisplay').textContent,
-        timerUrgent: totalSecs <= 30,
-        eventName: document.getElementById('eventName').value,
-        roundNum: document.getElementById('roundNum').value,
-        roundLabel: document.getElementById('roundLabel').value,
-        background: bg,
-        titleSponsors, sponsors, partners
-      }, '*');
-    }
+const socket = io();
 
-    renderTeamPool(); updateTimerUI();
-  </script>
+function send() {
+  const data = {
+    teams: teams.map((t, i) => ({
+      id: t.id,
+      name: t.name,
+      img: t.img,
+      color: COLORS[i % COLORS.length],
+      emoji: EMOJIS[i % EMOJIS.length],
+      rank: finishOrder.includes(t.id)
+        ? finishOrder.indexOf(t.id) + 1
+        : null,
+      finishTime: finishTimes[t.id] || null
+    })),
+    finishOrder,
+    timer: document.getElementById('timerDisplay').textContent,
+    timerUrgent: totalSecs <= 30,
+    eventName: document.getElementById('eventName').value,
+    roundNum: document.getElementById('roundNum').value,
+    roundLabel: document.getElementById('roundLabel').value,
+    background: bg,
+    titleSponsors,
+    sponsors,
+    partners
+  };
+
+  socket.emit("display-update", data); // ✅ THIS is the key
+}
+
+</script>
   </body>
 
 </html>

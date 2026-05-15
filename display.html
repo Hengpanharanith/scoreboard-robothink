@@ -294,6 +294,7 @@
     flex-shrink:0;
   }
 </style>
+    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
 
@@ -472,25 +473,34 @@ function setLogos(colId, containerId, items){
   const anyVisible=[...document.querySelectorAll('.sp-col')].some(c=>c.classList.contains('has-logos'));
   document.getElementById('bottomBar').classList.toggle('visible',anyVisible);
 }
+const socket = io();
 
-window.addEventListener('message',(ev)=>{
-  const d=ev.data;
-  if(d.eventName) document.getElementById('eventLabel').textContent=d.eventName;
-  if(d.roundNum!=null||d.roundLabel!=null)
-    document.getElementById('roundPill').textContent=`Round ${d.roundNum||'1'} · ${d.roundLabel||''}`;
+socket.on("display-update", (d) => {
+  if (!d) return;
 
-  const tv=document.getElementById('timerVal');
-  tv.textContent=d.timer||'00:00';
-  tv.classList.toggle('urgent',!!d.timerUrgent);
+  if(d.eventName)
+    document.getElementById('eventLabel').textContent = d.eventName;
 
-  if(d.background) document.getElementById('bg-custom').style.backgroundImage=`url(${d.background})`;
+  if(d.roundNum != null || d.roundLabel != null)
+    document.getElementById('roundPill').textContent =
+      `Round ${d.roundNum || '1'} · ${d.roundLabel || ''}`;
 
-  if(d.teams) renderTeams(d.teams,d.finishOrder||[]);
+  const tv = document.getElementById('timerVal');
+  tv.textContent = d.timer || '00:00';
+  tv.classList.toggle('urgent', !!d.timerUrgent);
+
+  if(d.background)
+    document.getElementById('bg-custom').style.backgroundImage =
+      `url(${d.background})`;
+
+  if(d.teams)
+    renderTeams(d.teams, d.finishOrder || []);
 
   setLogos('colTitle','logosTitle',d.titleSponsors);
   setLogos('colSponsor','logosSponsor',d.sponsors);
   setLogos('colPartner','logosPartner',d.partners);
 });
+
 </script>
   </body>
 </html>
