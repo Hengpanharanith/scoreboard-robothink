@@ -193,6 +193,7 @@
   }
   .s-wait{background:#F1F5F9;color:#94A3B8;border:2px solid #E2E8F0;}
   .s-done{color:white;border:2px solid transparent;}
+  .s-hold{background:#FFFBEB;color:#B45309;border:2px solid #FCD34D;}
 
   /* ── FINISH TIME ── */
   .finish-chip{
@@ -203,6 +204,19 @@
     white-space:nowrap;
   }
   .team-card.finished .finish-chip{opacity:1;transform:translateY(0);}
+
+  /* ── PUSH TIME ── */
+  .push-chip{
+    margin-top:6px;
+    font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;
+    padding:4px 12px;border-radius:999px;
+    background:#F8FAFF;border:2px solid #E2E8F0;color:#64748B;
+    white-space:nowrap;
+    transition:all .25s;
+  }
+  .team-card.holding .push-chip{
+    background:#FFFBEB;border-color:#FCD34D;color:#B45309;
+  }
 
   /* ── CONFETTI ── */
   .cf{position:fixed;pointer-events:none;z-index:200;animation:cfFall 1.4s ease-out forwards;}
@@ -393,6 +407,68 @@
 const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣'];
 const CC=['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6','#EC4899','#F97316'];
 let prevFO=[];
+let lastTeams=[];
+let lastFinishOrder=[];
+const pressedTeams={};
+const pushedTimes={};
+let matchSeconds = 10;
+let matchRunning = false;
+let matchStarted = false;
+function updateTimerDisplay() {
+  const timerEl = document.getElementById("timerVal");
+
+  const mins = String(Math.floor(matchSeconds / 60)).padStart(2, "0");
+  const secs = String(matchSeconds % 60).padStart(2, "0");
+
+  timerEl.textContent = `${mins}:${secs}`;
+}
+
+function startMatchTimer() {
+
+  if (matchRunning) return;
+
+  matchStarted = true;
+  matchRunning = true;
+  matchSeconds = 10;
+
+  updateTimerDisplay();
+
+  const interval = setInterval(() => {
+
+    matchSeconds--;
+
+    updateTimerDisplay();
+
+    if (matchSeconds <= 0) {
+
+      clearInterval(interval);
+
+      matchRunning = false;
+      matchSeconds = 0;
+
+      updateTimerDisplay();
+
+      console.log("MATCH ENDED");
+    }
+
+  }, 1000);
+}
+function applyButtonState(data) {
+  if (!data || data.id == null) return;
+
+  const isPressed = data.pressed === true || data.state === 'true';
+  const isReady = data.ready === true || data.state === 'ready';
+  const isReleased = isReady || data.pressed === false || data.state === 'false';
+  const matchTimer = document.getElementById('timerVal')?.textContent || '00:00';
+
+  if (isPressed) {
+    pressedTeams[data.id] = true;
+    pushedTimes[data.id] = data.clockTime || matchTimer;
+  } else if (isReleased) {
+    delete pressedTeams[data.id];
+    pushedTimes[data.id] = pushedTimes[data.id] || data.clockTime || matchTimer;
+  }
+}
 
 function spawnConfetti(x,y){
   for(let i=0;i<24;i++){
@@ -409,6 +485,8 @@ function spawnConfetti(x,y){
 }
 
 function renderTeams(teams,fo){
+  lastTeams=teams||[];
+  lastFinishOrder=fo||[];
   const grid=document.getElementById('teams-grid');
   // sync cards
   const existIds=new Set([...grid.children].map(c=>c.id));
@@ -418,6 +496,7 @@ function renderTeams(teams,fo){
 
   teams.forEach((t,i)=>{
     const rank=fo.includes(t.id)?fo.indexOf(t.id)+1:null;
+    const held=!!pressedTeams[t.id];
     let card=document.getElementById('tc_'+t.id);
     if(!card){
       card=document.createElement('div');
@@ -431,10 +510,13 @@ function renderTeams(teams,fo){
     const tc=t.color||'#3B82F6';
     card.style.setProperty('--tc',tc);
     card.style.setProperty('--tc-soft',tc+'12');
-    card.className='team-card'+(rank?' finished':'')+(rank===1?' rank-1':'');
+    card.className='team-card'+(rank?' finished':'')+(rank===1?' rank-1':'')+(held?' holding':'');
 
     const fdur=(2.5+i*.4)+'s';
     const fdel=(i*.3)+'s';
+    const pushTime=pushedTimes[t.id]||'';
+    const statusText=held ? '⏸ STOPPED' : (rank?`#${rank} FINISHED`:'READY');
+    const statusClass=held ? 's-hold' : (rank?'s-done':'s-wait');
 
     card.innerHTML=`
       ${rank?`<div class="rank-badge">${MEDALS[rank-1]}</div>`:''}
@@ -444,8 +526,11 @@ function renderTeams(teams,fo){
           :`<span class="emoji-bob" style="--fdur:${fdur};--fdel:${fdel}">${t.emoji||'🤖'}</span>`}
       </div>
       <div class="team-name-text">${t.name}</div>
-      <div class="status-chip ${rank?'s-done':'s-wait'}" style="${rank?`background:${tc};border-color:${tc}`:''}">
-        ${rank?`#${rank} FINISHED`:'⏳ Waiting...'}
+      <div class="status-chip ${statusClass}" style="${rank&&!held?`background:${tc};border-color:${tc}`:held?`background:#FFFBEB;border-color:#FCD34D;color:#B45309;`:''}">
+        ${statusText}
+      </div>
+      <div class="push-chip" style="display:${pushTime?'block':'none'};${pushTime?`border-color:${tc}40;color:${tc};background:${tc}10;`:''}">
+        ${pushTime ? `${held ? 'Pressed' : 'Last push'} ${pushTime}` : ''}
       </div>
       <div class="finish-chip" style="color:${tc};background:${tc}18;border:2px solid ${tc}40;">
         ⏱ ${t.finishTime||''}
@@ -493,12 +578,45 @@ socket.on("display-update", (d) => {
     document.getElementById('bg-custom').style.backgroundImage =
       `url(${d.background})`;
 
+  if(d.pushState){
+    const active = d.pushState.activePushes || {};
+    const last = d.pushState.lastPushTimes || {};
+    Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
+    Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
+    Object.entries(active).forEach(([id, info]) => {
+      pressedTeams[id] = true;
+      pushedTimes[id] = info.pressedAt || '';
+    });
+    Object.entries(last).forEach(([id, time]) => {
+      if (time) pushedTimes[id] = time;
+    });
+  }
+
   if(d.teams)
     renderTeams(d.teams, d.finishOrder || []);
 
   setLogos('colTitle','logosTitle',d.titleSponsors);
   setLogos('colSponsor','logosSponsor',d.sponsors);
   setLogos('colPartner','logosPartner',d.partners);
+});
+
+socket.on("button-update", (data) => {
+  applyButtonState(data);
+
+  if (lastTeams.length) {
+    renderTeams(lastTeams, lastFinishOrder);
+  }
+});
+
+socket.on("button-state-update", (states) => {
+  Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
+  Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
+
+  (states || []).forEach(applyButtonState);
+
+  if (lastTeams.length) {
+    renderTeams(lastTeams, lastFinishOrder);
+  }
 });
 
 </script>

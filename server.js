@@ -10,11 +10,18 @@ const io = new Server(server)
 
 app.use(express.static(__dirname))
 
-const SERIAL_PATH = "COM3" // change this if your Arduino is on another port
-const SERIAL_BAUD = 9600
+const SERIAL_PATH = "COM7" // change this if your Arduino is on another port
+const SERIAL_BAUD = 115200
 const RECONNECT_DELAY_MS = 1500
 
 let latestButtonState = false
+let buttonStates = {
+  1: { id: 1, state: "ready", pressed: false, ready: true },
+  2: { id: 2, state: "ready", pressed: false, ready: true },
+  3: { id: 3, state: "ready", pressed: false, ready: true },
+  4: { id: 4, state: "ready", pressed: false, ready: true },
+  5: { id: 5, state: "ready", pressed: false, ready: true },
+}
 let reconnectTimer = null
 let isShuttingDown = false
 
@@ -25,6 +32,10 @@ const port = new SerialPort({
 })
 
 const parser = port.pipe(new ReadlineParser({ delimiter: "\r\n" }))
+
+function emitButtonStateSnapshot(target = io) {
+  target.emit("button-state-update", Object.values(buttonStates))
+}
 
 function scheduleReconnect(reason) {
   if (isShuttingDown || reconnectTimer || port.isOpen) return
@@ -57,6 +68,7 @@ io.on("connection", (socket) => {
   // Sync current state for newly connected clients.
   socket.emit("arduino-status", port.isOpen)
   socket.emit("update", latestButtonState)
+  socket.emit("button-state-update", Object.values(buttonStates))
 
   socket.on("toggle", (data) => {
     latestButtonState = Boolean(data)
@@ -92,34 +104,50 @@ port.on("error", (err) => {
   io.emit("arduino-status", false)
   scheduleReconnect("error")
 })
-
+// DATA print
 parser.on("data", (data) => {
-  const normalized = String(data).trim().toUpperCase()
-  console.log("From Arduino:", normalized)
+  const raw = String(data).trim()
+  const eventTime = new Date()
+  const clockTime = eventTime.toLocaleTimeString()
+  const isoTime = eventTime.toISOString()
 
-  const isOn =
-    normalized === "1" ||
-    normalized === "ON" ||
-    normalized === "HIGH" ||
-    normalized === "PRESSED" ||
-    normalized === "TRUE"
+  console.log("From Arduino:", raw)
 
-  const isOff =
-    normalized === "0" ||
-    normalized === "OFF" ||
-    normalized === "LOW" ||
-    normalized === "RELEASED" ||
-    normalized === "FALSE"
+  // Get Sample ID
+  const idMatch = raw.match(/Sample ID:\s*(\d+)/i)
 
-  if (isOn || isOff) {
-    latestButtonState = isOn
-    io.emit("update", latestButtonState)
+  // Get Message
+  const stateMatch = raw.match(/Message:\s*"(true|ready)"/i)
+
+  if (!idMatch || !stateMatch) {
+    console.log("Invalid format")
     return
   }
 
-  // Best-effort fallback for unexpected payloads.
-  latestButtonState = normalized.length > 0
-  io.emit("update", latestButtonState)
+  const sampleId = idMatch[1]
+  const buttonState = stateMatch[1].toLowerCase()
+
+  // ONLY true = pressed
+  const isPressed = buttonState === "true"
+
+  // ready = waiting state
+  const isReady = buttonState === "ready"
+
+  console.log("Parsed:", {
+    sampleId,
+    buttonState,
+    isPressed,
+    isReady
+  })
+
+  io.emit("button-update", {
+    id: sampleId,
+    pressed: isPressed,
+    ready: isReady,
+    state: buttonState,
+    clockTime,
+    isoTime
+  })
 })
 
 openSerial("startup")

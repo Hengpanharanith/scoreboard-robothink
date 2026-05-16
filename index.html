@@ -7,8 +7,6 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap"
       rel="stylesheet">
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
       
     :root {
@@ -797,6 +795,7 @@
         <div class="ld"></div> LIVE
       </div>
       <button class="open-btn" onclick="openDisplay()">🖥 Open Display</button>
+      <button class="open-btn" onclick="openConfig()">⚙ Open Config</button>
     </div>
 
     <!-- ROUND INFO -->
@@ -841,7 +840,7 @@
         <button class="btt bstart" onclick="startTimer()">▶ Start</button>
         <button class="btt bpause" onclick="pauseTimer()">⏸ Pause</button>
         <button class="btt breset" onclick="resetRound()">↺ Reset Round</button>
-        <button class="btt bexp" onclick="exportExcel()">⬇ Export XLS</button>
+        <button class="btt bexp" onclick="exportCsv()">⬇ Export CSV</button>
       </div>
       <div class="srow">
         <label>Set Minutes:</label>
@@ -917,212 +916,500 @@
 
     <script>
     let displayWindow = null;
-    function openDisplay() { displayWindow = window.open("display.html", "display", "width=1280,height=800"); setTimeout(send, 900); }
-
-    // Tabs
-    function switchTab(name) {
-      document.querySelectorAll('.tab').forEach((t, i) => {
-        const names = ['bg', 'title', 'sponsor', 'partner'];
-        t.classList.toggle('active', names[i] === name);
-      });
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('tab-' + name).classList.add('active');
-    }
+    let configWindow = null;
+    const socket = io();
 
     const COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6'];
     const EMOJIS = ['🤖', '👾', '🦾', '🧠', '⚙️'];
     const MEDALS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    const MAX_TEAMS = 5;
 
-    let teams = [{ id: 1, name: "Team Alpha", img: null }, { id: 2, name: "Team Beta", img: null }];
-    let nextId = 3;
-    let finishOrder = [], finishTimes = {}, finishClocks = {};
+    let teams = [{ id: 1, name: 'Team 1', img: null }, { id: 2, name: 'Team 2', img: null }];
+    let finishOrder = [];
+    let finishTimes = {};
+    let finishClocks = {};
     let logRows = [];
-    let timerRunning = false, timerStarted = false, totalSecs = 600, timerInterval = null;
+    let pushLogs = [];
+    let activePushes = {};
+    let lastPushTimes = {};
+    let timerRunning = false;
+    let timerStarted = false;
+    let totalSecs = 600;
+    let timerInterval = null;
+    let bg = '';
+    let titleSponsors = [];
+    let sponsors = [];
+    let partners = [];
 
-    // ── TEAM POOL ──
+    function openDisplay() {
+      displayWindow = window.open('display.html', 'display', 'width=1280,height=800');
+      setTimeout(send, 900);
+    }
+
+    function openConfig() {
+      configWindow = window.open('config.html', 'config', 'width=1280,height=800');
+    }
+
+    function switchTab(name) {
+      const names = ['bg', 'title', 'sponsor', 'partner'];
+      document.querySelectorAll('.tab').forEach((tab, index) => {
+        tab.classList.toggle('active', names[index] === name);
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      document.getElementById(`tab-${name}`).classList.add('active');
+    }
+
+    function getNextTeamId() {
+      for (let id = 1; id <= MAX_TEAMS; id++) {
+        if (!teams.some(team => team.id === id)) return id;
+      }
+      return null;
+    }
+
+    function getCurrentRoundLabel() {
+      const roundNum = document.getElementById('roundNum').value || '1';
+      const roundLabel = document.getElementById('roundLabel').value || '';
+      return `Round ${roundNum} · ${roundLabel}`;
+    }
+
+    function formatCsvValue(value) {
+      const text = value == null ? '' : String(value);
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    function downloadCsv(filename, rows) {
+      const csv = rows.map(row => row.map(formatCsvValue).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
     function renderTeamPool() {
       const pool = document.getElementById('teamPool');
       pool.innerHTML = '';
-      teams.forEach((t, i) => {
-        const div = document.createElement('div'); div.className = 'tr';
-        div.innerHTML = `
-      <div class="tit" onclick="document.getElementById('ifi_${t.id}').click()" style="border-color:${COLORS[i % COLORS.length]}50" title="Click to upload image">
-        ${t.img
-            ? `<img src="${t.img}">`
-            : `<span class="emoji-preview">${EMOJIS[i % EMOJIS.length]}</span>`}
-      </div>
-      <input type="file" accept="image/*" class="ifi" id="ifi_${t.id}" onchange="handleImg(${t.id},this)">
-      <div class="tcd" style="background:${COLORS[i % COLORS.length]}"></div>
-      <input class="ni" type="text" value="${t.name}" oninput="updateTName(${t.id},this.value)">
-      ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${t.id})">✕</button>` : ''}
-    `;
-        pool.appendChild(div);
+
+      teams.forEach((team, index) => {
+        const row = document.createElement('div');
+        row.className = 'tr';
+        row.innerHTML = `
+          <div class="tit" onclick="document.getElementById('ifi_${team.id}').click()" style="border-color:${COLORS[index % COLORS.length]}50" title="Click to upload image">
+            ${team.img ? `<img src="${team.img}">` : `<span class="emoji-preview">${EMOJIS[index % EMOJIS.length]}</span>`}
+          </div>
+          <input type="file" accept="image/*" class="ifi" id="ifi_${team.id}" onchange="handleImg(${team.id},this)">
+          <div class="tcd" style="background:${COLORS[index % COLORS.length]}"></div>
+          <input class="ni" type="text" value="${team.name}" oninput="updateTName(${team.id},this.value)">
+          ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ''}
+        `;
+        pool.appendChild(row);
       });
-      document.getElementById('addTeamBtn').style.display = teams.length >= 5 ? 'none' : 'flex';
-      renderFinishList(); send();
+
+      document.getElementById('addTeamBtn').style.display = teams.length >= MAX_TEAMS ? 'none' : 'flex';
+      renderFinishList();
+      send();
     }
 
     function handleImg(id, input) {
-      const f = input.files[0]; if (!f) return;
-      const r = new FileReader();
-      r.onload = () => { const t = teams.find(t => t.id === id); if (t) { t.img = r.result; renderTeamPool(); } };
-      r.readAsDataURL(f);
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const team = teams.find(item => item.id === id);
+        if (team) {
+          team.img = reader.result;
+          renderTeamPool();
+        }
+      };
+      reader.readAsDataURL(file);
     }
-    function updateTName(id, n) { const t = teams.find(t => t.id === id); if (t) { t.name = n; renderFinishList(); send(); } }
-    function addTeam() { if (teams.length >= 5) return; teams.push({ id: nextId++, name: `Team ${String.fromCharCode(64 + teams.length + 1)}`, img: null }); renderTeamPool(); }
-    function removeTeam(id) {
-      teams = teams.filter(t => t.id !== id);
-      finishOrder = finishOrder.filter(f => f !== id);
-      delete finishTimes[id]; delete finishClocks[id];
+
+    function updateTName(id, name) {
+      const team = teams.find(item => item.id === id);
+      if (team) {
+        team.name = name;
+        renderFinishList();
+        send();
+      }
+    }
+
+    function addTeam() {
+      const id = getNextTeamId();
+      if (id == null) return;
+
+      teams.push({ id, name: `Team ${id}`, img: null });
       renderTeamPool();
     }
 
-    // ── FINISH LIST ──
+    function removeTeam(id) {
+      teams = teams.filter(team => team.id !== id);
+      finishOrder = finishOrder.filter(teamId => teamId !== id);
+      delete finishTimes[id];
+      delete finishClocks[id];
+      delete activePushes[id];
+      delete lastPushTimes[id];
+      renderTeamPool();
+    }
+
     function renderFinishList() {
-      const list = document.getElementById('finishList'); list.innerHTML = '';
-      teams.forEach((t, i) => {
-        const rank = finishOrder.indexOf(t.id); const finished = rank !== -1;
-        const div = document.createElement('div'); div.className = 'ftr' + (finished ? ' finished' : '');
-        div.innerHTML = `
-      <div class="frank">${finished ? MEDALS[rank] : '·'}</div>
-      <div class="fimg">${t.img ? `<img src="${t.img}">` : `<span>${EMOJIS[i % EMOJIS.length]}</span>`}</div>
-      <div class="fname" style="color:${COLORS[i % COLORS.length]}">${t.name}</div>
-      <div class="ftime">${finished ? '⏱ ' + finishTimes[t.id] : ''}</div>
-      ${finished
-            ? `<button class="bunfin" onclick="unfinish(${t.id})">↺ Undo</button>`
-            : `<button class="bfin" onclick="markFinish(${t.id})" ${!timerStarted ? 'disabled' : ''}>🏁 Finish!</button>`}
-    `;
-        list.appendChild(div);
+      const list = document.getElementById('finishList');
+      list.innerHTML = '';
+
+      teams.forEach((team, index) => {
+        const rank = finishOrder.indexOf(team.id);
+        const finished = rank !== -1;
+        const row = document.createElement('div');
+        row.className = `ftr${finished ? ' finished' : ''}`;
+        row.innerHTML = `
+          <div class="frank">${finished ? MEDALS[rank] : '·'}</div>
+          <div class="fimg">${team.img ? `<img src="${team.img}">` : `<span>${EMOJIS[index % EMOJIS.length]}</span>`}</div>
+          <div class="fname" style="color:${COLORS[index % COLORS.length]}">${team.name}</div>
+          <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ''}</div>
+          ${finished ? `<button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>` : `<button class="bfin" onclick="markFinish(${team.id})" ${!timerStarted || !timerRunning || totalSecs <= 0 ? 'disabled' : ''}>🏁 Finish!</button>`}
+        `;
+        list.appendChild(row);
       });
     }
+
     function markFinish(id) {
-      if (finishOrder.includes(id)) return;
-      finishOrder.push(id); finishTimes[id] = document.getElementById('timerDisplay').textContent;
+      if (!timerStarted || !timerRunning || totalSecs <= 0 || finishOrder.includes(id)) return;
+
+      finishOrder.push(id);
+      finishTimes[id] = document.getElementById('timerDisplay').textContent;
       finishClocks[id] = new Date().toLocaleTimeString();
-      const t = teams.find(t => t.id === id); const rank = finishOrder.length;
-      logRows.push({ round: `Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`, rank, team: t ? t.name : '?', finishTime: finishTimes[id], clock: finishClocks[id] });
-      renderFinishList(); renderLog(); send();
+
+      const team = teams.find(item => item.id === id);
+      const rank = finishOrder.length;
+      logRows.push({
+        recordType: 'finish',
+        round: getCurrentRoundLabel(),
+        rank,
+        team: team ? team.name : '?',
+        finishTime: finishTimes[id],
+        clock: finishClocks[id]
+      });
+
+      renderFinishList();
+      renderLog();
+      send();
     }
+
     function unfinish(id) {
-      const t = teams.find(t => t.id === id);
-      const rs = `Round ${document.getElementById('roundNum').value} · ${document.getElementById('roundLabel').value}`;
-      logRows = logRows.filter(r => !(r.team === (t ? t.name : '?') && r.round === rs));
-      finishOrder = finishOrder.filter(f => f !== id); delete finishTimes[id]; delete finishClocks[id];
-      renderFinishList(); renderLog(); send();
+      const team = teams.find(item => item.id === id);
+      const roundLabel = getCurrentRoundLabel();
+      const teamName = team ? team.name : '?';
+
+      logRows = logRows.filter(row => !(row.recordType === 'finish' && row.team === teamName && row.round === roundLabel));
+      finishOrder = finishOrder.filter(teamId => teamId !== id);
+      delete finishTimes[id];
+      delete finishClocks[id];
+
+      renderFinishList();
+      renderLog();
+      send();
     }
+
     function renderLog() {
-      const tb = document.getElementById('logBody');
-      if (!logRows.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>'; return; }
-      const rc = r => r === 1 ? 'rk1' : r === 2 ? 'rk2' : r === 3 ? 'rk3' : 'rko';
-      tb.innerHTML = [...logRows].reverse().map(r => `<tr><td style="font-weight:700;font-size:10px;color:var(--muted)">${r.round}</td><td><span class="rp ${rc(r.rank)}">${MEDALS[r.rank - 1]} #${r.rank}</span></td><td style="font-weight:800">${r.team}</td><td style="font-weight:700">${r.finishTime}</td><td style="color:var(--muted)">${r.clock}</td></tr>`).join('');
+      const body = document.getElementById('logBody');
+      const finishRows = logRows.filter(row => row.recordType === 'finish');
+
+      if (!finishRows.length) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';
+        return;
+      }
+
+      const rankClass = rank => (rank === 1 ? 'rk1' : rank === 2 ? 'rk2' : rank === 3 ? 'rk3' : 'rko');
+      body.innerHTML = [...finishRows].reverse().map(row => `
+        <tr>
+          <td style="font-weight:700;font-size:10px;color:var(--muted)">${row.round}</td>
+          <td><span class="rp ${rankClass(row.rank)}">${MEDALS[row.rank - 1]} #${row.rank}</span></td>
+          <td style="font-weight:800">${row.team}</td>
+          <td style="font-weight:700">${row.finishTime}</td>
+          <td style="color:var(--muted)">${row.clock}</td>
+        </tr>
+      `).join('');
     }
 
-    // ── TIMER ──
     function updateTimerUI() {
-      const m = Math.floor(totalSecs / 60), s = totalSecs % 60;
-      document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-      document.getElementById('timerDisplay').classList.toggle('urgent', totalSecs <= 30); send();
+      const minutes = Math.floor(totalSecs / 60);
+      const seconds = totalSecs % 60;
+      document.getElementById('timerDisplay').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById('timerDisplay').classList.toggle('urgent', totalSecs <= 30);
+      renderFinishList();
+      send();
     }
-    function startTimer() { if (timerInterval) return; timerRunning = true; timerStarted = true; timerInterval = setInterval(() => { if (totalSecs <= 0) { clearInterval(timerInterval); timerInterval = null; timerRunning = false; return; } totalSecs--; updateTimerUI(); }, 1000); renderFinishList(); }
-    function pauseTimer() { if (!timerInterval) return; clearInterval(timerInterval); timerInterval = null; timerRunning = false; }
-    function applyTimer() { totalSecs = (parseInt(document.getElementById('minutesInput').value) || 10) * 60; updateTimerUI(); }
+
+    function startTimer() {
+      if (timerInterval) return;
+      if (totalSecs <= 0) {
+        totalSecs = (parseInt(document.getElementById('minutesInput').value, 10) || 10) * 60;
+      }
+
+      timerStarted = true;
+      timerRunning = true;
+      renderFinishList();
+
+      timerInterval = setInterval(() => {
+        if (totalSecs <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerRunning = false;
+          renderFinishList();
+          send();
+          return;
+        }
+
+        totalSecs--;
+        updateTimerUI();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (!timerInterval) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerRunning = false;
+      renderFinishList();
+      send();
+    }
+
+    function applyTimer() {
+      totalSecs = (parseInt(document.getElementById('minutesInput').value, 10) || 10) * 60;
+      updateTimerUI();
+    }
+
     function resetRound() {
-      pauseTimer(); timerStarted = false;
-      totalSecs = (parseInt(document.getElementById('minutesInput').value) || 10) * 60;
-      finishOrder = []; finishTimes = {}; finishClocks = {};
-      updateTimerUI(); renderFinishList();
+      pauseTimer();
+      timerStarted = false;
+      totalSecs = (parseInt(document.getElementById('minutesInput').value, 10) || 10) * 60;
+      finishOrder = [];
+      finishTimes = {};
+      finishClocks = {};
+      activePushes = {};
+      lastPushTimes = {};
+      updateTimerUI();
+      renderFinishList();
+      renderLog();
+      send();
     }
-    function exportExcel() {
-      const header = [['Round', 'Rank', 'Team', 'Finish Time (Timer)', 'Clock Time']];
-      const rows = logRows.map(r => [r.round, `#${r.rank}`, r.team, r.finishTime, r.clock]);
-      const ws = XLSX.utils.aoa_to_sheet([...header, ...rows]);
-      ws['!cols'] = [{ wch: 24 }, { wch: 6 }, { wch: 20 }, { wch: 18 }, { wch: 12 }];
-      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Results');
-      XLSX.writeFile(wb, `RoboRace_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    function isCountdownActive() {
+      return timerStarted && timerRunning && totalSecs > 0;
     }
 
-    // ── MEDIA ──
-    let bg = '';
-    let titleSponsors = [], sponsors = [], partners = [];
+    function updatePushState(data) {
+      const teamId = Number(data.id);
+      const team = teams.find(item => item.id === teamId);
+      if (!team) return;
 
-    document.getElementById('backgroundInput').onchange = e => {
-      const r = new FileReader(); r.onload = () => { bg = r.result; send(); }; r.readAsDataURL(e.target.files[0]);
-    };
+      if (data.pressed) {
+        if (!isCountdownActive() || activePushes[teamId]) return;
 
-    function makeFileHandler(inputId, arr, listId) {
-      document.getElementById(inputId).onchange = e => {
-        const f = e.target.files[0]; if (!f) return;
-        const r = new FileReader();
-        r.onload = () => { arr.push({ id: Date.now(), src: r.result, name: f.name }); renderSponsorList(arr, listId); send(); };
-        r.readAsDataURL(f); e.target.value = '';
+        activePushes[teamId] = {
+          teamId,
+          teamName: team.name,
+          round: getCurrentRoundLabel(),
+          pressedAt: data.clockTime || new Date().toLocaleTimeString(),
+          pressedIso: data.isoTime || new Date().toISOString(),
+          timerAtPress: document.getElementById('timerDisplay').textContent
+        };
+
+        lastPushTimes[teamId] = activePushes[teamId].pressedAt;
+        send();
+        return;
+      }
+
+      const active = activePushes[teamId];
+      if (!active) return;
+
+      const releasedAt = data.clockTime || new Date().toLocaleTimeString();
+      const releasedIso = data.isoTime || new Date().toISOString();
+      const durationSec = Number(((new Date(releasedIso).getTime() - new Date(active.pressedIso).getTime()) / 1000).toFixed(1));
+
+      pushLogs.push({
+        teamId,
+        teamName: team.name,
+        round: active.round,
+        pressedAt: active.pressedAt,
+        releasedAt,
+        timerAtPress: active.timerAtPress,
+        timerAtRelease: document.getElementById('timerDisplay').textContent,
+        durationSec: Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : ''
+      });
+
+      lastPushTimes[teamId] = active.pressedAt;
+      delete activePushes[teamId];
+      send();
+    }
+
+    socket.on('button-update', updatePushState);
+
+    function exportCsv() {
+      const rows = [[
+        'Record Type',
+        'Round',
+        'Rank',
+        'Team',
+        'Finish Time',
+        'Clock Time',
+        'Button ID',
+        'Pressed At',
+        'Released At',
+        'Timer At Press',
+        'Timer At Release',
+        'Hold Duration (sec)'
+      ]];
+
+      logRows.filter(row => row.recordType === 'finish').forEach(row => {
+        rows.push([
+          'finish',
+          row.round,
+          `#${row.rank}`,
+          row.team,
+          row.finishTime,
+          row.clock,
+          '',
+          '',
+          '',
+          '',
+          '',
+          ''
+        ]);
+      });
+
+      Object.values(activePushes).forEach(push => {
+        rows.push([
+          'button_press_active',
+          push.round,
+          '',
+          push.teamName,
+          '',
+          '',
+          push.teamId,
+          push.pressedAt,
+          '',
+          push.timerAtPress,
+          '',
+          ''
+        ]);
+      });
+
+      pushLogs.forEach(push => {
+        rows.push([
+          'button_press',
+          push.round,
+          '',
+          push.teamName,
+          '',
+          '',
+          push.teamId,
+          push.pressedAt,
+          push.releasedAt,
+          push.timerAtPress,
+          push.timerAtRelease,
+          push.durationSec
+        ]);
+      });
+
+      downloadCsv(`RoboRace_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    }
+
+    function makeFileHandler(inputId, listRef, listId) {
+      document.getElementById(inputId).onchange = event => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          listRef.push({ id: Date.now() + Math.random(), src: reader.result, name: file.name });
+          renderSponsorList(listRef, listId);
+          send();
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
       };
     }
+
+    function renderSponsorList(arr, listId) {
+      const removeFn = listId === 'titleList' ? 'removeTitleSponsor' : listId === 'sponsorList' ? 'removeSponsor' : 'removePartner';
+      document.getElementById(listId).innerHTML = arr.map(item => `
+        <div class="sitem">
+          <img src="${item.src}"><span>${item.name}</span>
+          <button class="rspon" onclick="${removeFn}(${item.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    window.removeTitleSponsor = id => {
+      titleSponsors = titleSponsors.filter(item => item.id !== id);
+      renderSponsorList(titleSponsors, 'titleList');
+      send();
+    };
+
+    window.removeSponsor = id => {
+      sponsors = sponsors.filter(item => item.id !== id);
+      renderSponsorList(sponsors, 'sponsorList');
+      send();
+    };
+
+    window.removePartner = id => {
+      partners = partners.filter(item => item.id !== id);
+      renderSponsorList(partners, 'partnerList');
+      send();
+    };
+
+    document.getElementById('backgroundInput').onchange = event => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        bg = reader.result;
+        send();
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    };
+
     makeFileHandler('titleInput', titleSponsors, 'titleList');
     makeFileHandler('sponsorInput', sponsors, 'sponsorList');
     makeFileHandler('partnerInput', partners, 'partnerList');
 
-    function removeFrom(arr, id, listId) {
-      const i = arr.findIndex(s => s.id === id); if (i >= 0) arr.splice(i, 1);
-      renderSponsorList(arr, listId); send();
+    function send() {
+      socket.emit('display-update', {
+        teams: teams.map((team, index) => ({
+          id: team.id,
+          name: team.name,
+          img: team.img,
+          color: COLORS[index % COLORS.length],
+          emoji: EMOJIS[index % EMOJIS.length],
+          rank: finishOrder.includes(team.id) ? finishOrder.indexOf(team.id) + 1 : null,
+          finishTime: finishTimes[team.id] || null
+        })),
+        finishOrder,
+        timer: document.getElementById('timerDisplay').textContent,
+        timerUrgent: totalSecs <= 30,
+        timerRunning,
+        timerStarted,
+        eventName: document.getElementById('eventName').value,
+        roundNum: document.getElementById('roundNum').value,
+        roundLabel: document.getElementById('roundLabel').value,
+        background: bg,
+        pushState: {
+          activePushes,
+          lastPushTimes
+        },
+        titleSponsors,
+        sponsors,
+        partners
+      });
     }
-    function renderSponsorList(arr, listId) {
-      document.getElementById(listId).innerHTML = arr.map(s => `
-    <div class="sitem">
-      <img src="${s.src}"><span>${s.name}</span>
-      <button class="rspon" onclick="removeFrom(${listId === 'titleList' ? 'titleSponsors' : listId === 'sponsorList' ? 'sponsors' : 'partners'},${s.id},'${listId}')">✕</button>
-    </div>`).join('');
-    }
-    // Fix: pass the actual array reference via closure
-    function removeFrom(arr, id, listId) {
-      const idx = arr.findIndex(s => s.id === id); if (idx >= 0) arr.splice(idx, 1);
-      renderSponsorList(arr, listId); send();
-    }
-    // Need global remove handlers
-    window.removeTitleSponsor = id => { const i = titleSponsors.findIndex(s => s.id === id); if (i >= 0) titleSponsors.splice(i, 1); renderSponsorList(titleSponsors, 'titleList'); send(); }
-    window.removeSponsor = id => { const i = sponsors.findIndex(s => s.id === id); if (i >= 0) sponsors.splice(i, 1); renderSponsorList(sponsors, 'sponsorList'); send(); }
-    window.removePartner = id => { const i = partners.findIndex(s => s.id === id); if (i >= 0) partners.splice(i, 1); renderSponsorList(partners, 'partnerList'); send(); }
 
-    // Override renderSponsorList to use correct remove fn
-    function renderSponsorList(arr, listId) {
-      const removeFn = listId === 'titleList' ? 'removeTitleSponsor' : listId === 'sponsorList' ? 'removeSponsor' : 'removePartner';
-      document.getElementById(listId).innerHTML = arr.map(s => `
-    <div class="sitem">
-      <img src="${s.src}"><span>${s.name}</span>
-      <button class="rspon" onclick="${removeFn}(${s.id})">✕</button>
-    </div>`).join('');
-    }
-
-const socket = io();
-
-function send() {
-  const data = {
-    teams: teams.map((t, i) => ({
-      id: t.id,
-      name: t.name,
-      img: t.img,
-      color: COLORS[i % COLORS.length],
-      emoji: EMOJIS[i % EMOJIS.length],
-      rank: finishOrder.includes(t.id)
-        ? finishOrder.indexOf(t.id) + 1
-        : null,
-      finishTime: finishTimes[t.id] || null
-    })),
-    finishOrder,
-    timer: document.getElementById('timerDisplay').textContent,
-    timerUrgent: totalSecs <= 30,
-    eventName: document.getElementById('eventName').value,
-    roundNum: document.getElementById('roundNum').value,
-    roundLabel: document.getElementById('roundLabel').value,
-    background: bg,
-    titleSponsors,
-    sponsors,
-    partners
-  };
-
-  socket.emit("display-update", data); // ✅ THIS is the key
-}
-
-</script>
+    renderTeamPool();
+    renderLog();
+    updateTimerUI();
+    </script>
   </body>
 
 </html>
