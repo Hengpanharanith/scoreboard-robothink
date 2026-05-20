@@ -1,94 +1,73 @@
 ﻿# RoboThink Scoreboard
 
-Real-time scoreboard system for RoboThink events with:
-- Control panel for operator actions
-- Live display page for audience/projector
-- Optional Arduino serial input for hardware button state
+Real-time scoreboard system for RoboThink events.
 
-## Current Architecture
+## How to run
 
-Arduino -> SerialPort (USB/COM) -> Node.js server -> Socket.IO -> Browser UIs
-
-The Node server is the central hub that:
-- Serves static files from this folder
-- Reads Arduino serial data
-- Broadcasts live events to connected pages
-
-## Project Structure (Current)
-
-```text
-scoreboard-robothink/
-|- server.js
-|- package.json
-|- package-lock.json
-|- index.html         # Main control panel
-|- display.html       # Audience display screen
-|- testing.html       # Arduino/socket status test page
-|- sponsor_logo/      # Sponsor images
-|- push_button/       # Arduino/button related assets
-|- README.md
-```
-
-## Features
-
-### Control panel (index.html)
-- Edit event and round info
-- Manage teams (2-5), names, and robot images
-- Mark finish order and export results to XLS
-- Timer controls (start/pause/reset/custom minutes)
-- Background upload and sponsor/partner logo uploads
-- Open live display window
-
-### Display screen (display.html)
-- Shows event/round, teams, finish ranks, timer, and uploaded media
-- Receives updates in real time from the control panel data stream
-
-### Arduino test page (testing.html)
-- Shows Arduino connection status (`arduino-status`)
-- Shows button state (`update`)
-- Useful for validating serial-to-UI flow quickly
-
-### Server (server.js)
-- Express static file hosting
-- Socket.IO real-time messaging
-- SerialPort integration on `COM3` at `9600` baud
-- Auto reconnect after Arduino restart/disconnect (no Node restart required)
-
-## Run
-
-1. Install dependencies
+1. Install dependencies.
 
 ```bash
 npm install
 ```
 
-2. Start server
+2. Start the Node server.
 
 ```bash
 npm start
 ```
 
-3. Open pages
+3. Open the app in your browser.
 
-- Control: http://localhost:8888/index.html
-- Display: http://localhost:8888/display.html
-- Arduino test: http://localhost:8888/testing.html
+```text
+http://localhost:8888/index.html
+http://localhost:8888/config.html
+http://localhost:8888/display.html
+```
 
-## Socket Events Used
+## Project flow
 
-- `arduino-status` -> `true/false` connection state
-- `update` -> button state boolean
-- `toggle` -> frontend/manual state push (rebroadcast as `update`)
+The project runs as a simple live data loop:
 
-## Arduino Serial Notes
+Arduino button input -> `server.js` -> Socket.IO -> browser pages
 
-`server.js` maps these incoming serial values:
-- ON values: `1`, `ON`, `HIGH`, `PRESSED`, `TRUE`
-- OFF values: `0`, `OFF`, `LOW`, `RELEASED`, `FALSE`
+`server.js` is the center of the system. It:
 
-If the Arduino is not on `COM3`, update `SERIAL_PATH` in `server.js`.
+- Serves the files from the project root with Express
+- Opens the serial connection to the Arduino
+- Listens for button data from the Arduino
+- Broadcasts updates to every connected browser page
 
-## Dev Notes
+The browser pages each have a role:
 
-- This project currently serves files from the root folder using `express.static(__dirname)`.
-- If you later move files into a `public/` folder, update static path and README links accordingly.
+- `index.html` is the main control page for the operator
+- `config.html` is the configuration screen
+- `display.html` is the live audience/projector display
+
+When the operator changes something in the browser, the update is sent to `server.js`, then pushed to the other pages in real time.
+
+## Current server settings
+
+- Port: `8888`
+- Serial path: `COM7` (Update that com port to make it the same as Device Manager)
+- Serial baud rate: `115200`
+
+If your Arduino uses a different COM port, update `SERIAL_PATH` in `server.js`.
+
+## Folder overview
+
+```text
+server.js
+package.json
+index.html
+config.html
+display.html
+push_button/
+sponsor_logo/
+README.md
+```
+## How to use it With OBS 
+1. After run the project 
+2. Create Browser source in OBS 
+3. Input the URL (Your ipv4/display.html) Ex: http://172.20.10.2:8888/display.html
+4. Control page url is (Your ipv4:8888) EX: http://172.20.10.2:8080/ (Can use it on phone or other Device browser)
+Note : All device need the same Network
