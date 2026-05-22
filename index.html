@@ -9,6 +9,10 @@
       rel="stylesheet">
     <link rel="stylesheet" href="/style/index.css">
     <style>
+    .connection-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:18px;background:#f3f4f6;color:#111;font-weight:700;font-size:12px;border:1px solid rgba(0,0,0,.06)}
+    .connection-pill .status-dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,0.08)}
+    .connection-pill.connected .status-dot{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,0.08)}
+    #comPortInput{margin-left:10px;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;color:#111;font-weight:600;width:90px}
    
   </style>
   </head>
@@ -26,8 +30,18 @@
       <div class="live-badge">
         <div class="ld"></div> LIVE
       </div>
+      <div id="connection-pill" class="connection-pill"
+        style="margin-left:10px">
+        <div class="status-dot"></div>
+        <span id="connection-text">Disconnected</span>
+      </div>
+      <input id="comPortInput" type="text" value title="COM port (editable)" />
+      <button id="applyComBtn" class="open-btn"
+        style="margin-left:6px;padding:6px 8px;" onclick="applyComPort()">Apply
+      </button>
       <button class="open-btn" onclick="openDisplay()">🖥 Open Display</button>
-      <button class="open-btn" onclick="openConfig()">⚙ Open Config</button>
+      <button id="openConfigBtn" class="open-btn" onclick="openConfig()"
+        style="display:none">⚙ Open Config</button>
     </div>
 
     <!-- ROUND INFO -->
@@ -172,6 +186,78 @@
     let titleSponsors = [];
     let sponsors = [];
     let partners = [];
+    const STORAGE_KEY = 'robothink-control-state';
+    const DISPLAY_STATE_KEY = 'robothink-display-state';
+
+    function saveState() {
+      try {
+        const state = {
+          teams,
+          finishOrder,
+          finishTimes,
+          finishClocks,
+          logRows,
+          pushLogs,
+          activePushes,
+          lastPushTimes,
+          timerRunning,
+          timerStarted,
+          totalSecs,
+          bg,
+          titleSponsors,
+          sponsors,
+          partners,
+          eventName: document.getElementById('eventName')?.value || '',
+          roundNum: document.getElementById('roundNum')?.value || '1',
+          roundLabel: document.getElementById('roundLabel')?.value || '',
+          minutesInput: document.getElementById('minutesInput')?.value || '10',
+          comPort: document.getElementById('comPortInput')?.value || '',
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.warn('Could not save control state', err);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const state = JSON.parse(raw);
+        if (Array.isArray(state.teams) && state.teams.length) teams = state.teams;
+        if (Array.isArray(state.finishOrder)) finishOrder = state.finishOrder;
+        if (state.finishTimes && typeof state.finishTimes === 'object') finishTimes = state.finishTimes;
+        if (state.finishClocks && typeof state.finishClocks === 'object') finishClocks = state.finishClocks;
+        if (Array.isArray(state.logRows)) logRows = state.logRows;
+        if (Array.isArray(state.pushLogs)) pushLogs = state.pushLogs;
+        if (state.activePushes && typeof state.activePushes === 'object') activePushes = state.activePushes;
+        if (state.lastPushTimes && typeof state.lastPushTimes === 'object') lastPushTimes = state.lastPushTimes;
+        if (Array.isArray(state.titleSponsors)) titleSponsors = state.titleSponsors;
+        if (Array.isArray(state.sponsors)) sponsors = state.sponsors;
+        if (Array.isArray(state.partners)) partners = state.partners;
+        if (typeof state.bg === 'string') bg = state.bg;
+        if (typeof state.timerRunning === 'boolean') timerRunning = state.timerRunning;
+        if (typeof state.timerStarted === 'boolean') timerStarted = state.timerStarted;
+        if (Number.isFinite(Number(state.totalSecs))) totalSecs = Number(state.totalSecs);
+        timerRunning = false;
+
+        const eventNameInput = document.getElementById('eventName');
+        const roundNumInput = document.getElementById('roundNum');
+        const roundLabelInput = document.getElementById('roundLabel');
+        const minutesInput = document.getElementById('minutesInput');
+        const comPortInput = document.getElementById('comPortInput');
+
+        if (eventNameInput && typeof state.eventName === 'string') eventNameInput.value = state.eventName;
+        if (roundNumInput && typeof state.roundNum === 'string') roundNumInput.value = state.roundNum;
+        if (roundLabelInput && typeof state.roundLabel === 'string') roundLabelInput.value = state.roundLabel;
+        if (minutesInput && typeof state.minutesInput === 'string') minutesInput.value = state.minutesInput;
+        if (comPortInput && typeof state.comPort === 'string') comPortInput.value = state.comPort;
+      } catch (err) {
+        console.warn('Could not load control state', err);
+      }
+    }
 
     function openDisplay() {
       displayWindow = window.open('display.html', 'display', 'width=1280,height=800');
@@ -609,7 +695,7 @@
     makeFileHandler('partnerInput', partners, 'partnerList');
 
     function send() {
-      socket.emit('display-update', {
+      const payload = {
         teams: teams.map((team, index) => ({
           id: team.id,
           name: team.name,
@@ -635,8 +721,62 @@
         titleSponsors,
         sponsors,
         partners
-      });
+      };
+
+      try {
+        localStorage.setItem(DISPLAY_STATE_KEY, JSON.stringify(payload));
+      } catch (err) {
+        console.warn('Could not save display state', err);
+      }
+
+      socket.emit('display-update', payload);
+
+      saveState();
     }
+
+    // Update connection UI when server reports Arduino status or serial info
+    function updateConnectionUI(open, path) {
+      const pill = document.getElementById('connection-pill');
+      const text = document.getElementById('connection-text');
+      const input = document.getElementById('comPortInput');
+      if (!pill || !text || !input) return;
+
+      if (open) {
+        pill.classList.add('connected');
+        text.textContent = 'Connected';
+      } else {
+        pill.classList.remove('connected');
+        text.textContent = 'Disconnected';
+      }
+
+      if (typeof path === 'string' && path) input.value = path;
+    }
+
+    socket.on('arduino-status', (isConnected) => {
+      updateConnectionUI(Boolean(isConnected));
+    });
+
+    socket.on('serial-info', (info) => {
+      if (!info) return;
+      updateConnectionUI(Boolean(info.open), info.path);
+    });
+
+    function applyComPort() {
+      const input = document.getElementById('comPortInput');
+      if (!input) return;
+      const newPath = input.value && input.value.trim();
+      if (!newPath) return;
+      socket.emit('set-serial', { path: newPath });
+      const text = document.getElementById('connection-text');
+      if (text) text.textContent = 'Applying...';
+      saveState();
+    }
+
+    loadState();
+
+    renderSponsorList(titleSponsors, 'titleList');
+    renderSponsorList(sponsors, 'sponsorList');
+    renderSponsorList(partners, 'partnerList');
 
     renderTeamPool();
     renderLog();

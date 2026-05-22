@@ -105,6 +105,7 @@
     <script>
 const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣'];
 const CC=['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6','#EC4899','#F97316'];
+    const DISPLAY_STATE_KEY = 'robothink-display-state';
 let prevFO=[];
 let lastTeams=[];
 let lastFinishOrder=[];
@@ -257,9 +258,8 @@ function setLogos(colId, containerId, items){
   const anyVisible=[...document.querySelectorAll('.sp-col')].some(c=>c.classList.contains('has-logos'));
   document.getElementById('bottomBar').classList.toggle('visible',anyVisible);
 }
-const socket = io();
 
-socket.on("display-update", (d) => {
+function applyDisplayState(d) {
   if (!d) return;
 
   if(d.eventName)
@@ -297,6 +297,31 @@ socket.on("display-update", (d) => {
   setLogos('colTitle','logosTitle',d.titleSponsors);
   setLogos('colSponsor','logosSponsor',d.sponsors);
   setLogos('colPartner','logosPartner',d.partners);
+}
+
+function loadSharedDisplayState() {
+  try {
+    const raw = localStorage.getItem(DISPLAY_STATE_KEY);
+    if (!raw) return;
+    applyDisplayState(JSON.parse(raw));
+  } catch (err) {
+    console.warn('Could not load shared display state', err);
+  }
+}
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== DISPLAY_STATE_KEY || !event.newValue) return;
+  try {
+    applyDisplayState(JSON.parse(event.newValue));
+  } catch (err) {
+    console.warn('Could not apply shared display state', err);
+  }
+});
+
+const socket = io();
+
+socket.on("display-update", (d) => {
+  applyDisplayState(d);
 });
 
 socket.on("button-update", (data) => {
@@ -317,6 +342,8 @@ socket.on("button-state-update", (states) => {
     renderTeams(lastTeams, lastFinishOrder);
   }
 });
+
+loadSharedDisplayState();
 
 </script>
   </body>

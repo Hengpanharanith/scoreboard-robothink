@@ -1,0 +1,10 @@
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: #F07900;
+  opacity: 0.9;
+  transform: translateY(-2px);
+  cursor: pointer;
+}
