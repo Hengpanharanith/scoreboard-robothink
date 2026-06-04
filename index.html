@@ -17,6 +17,7 @@
   </style>
   </head>
   <script src="/socket.io/socket.io.js"></script>
+
   <body>
 
     <!-- HEADER -->
@@ -80,7 +81,7 @@
 
     <!-- TIMER -->
     <div class="card">
-      <div class="st">⏱ Match Timer</div>
+      <div class="st ">⏱ Match Timer</div>
       <div class="tbig" id="timerDisplay">10:00</div>
       <div class="tbtns">
         <button class="btt bstart" onclick="startTimer()">▶ Start</button>
@@ -117,58 +118,42 @@
     </div>
 
     <!-- MEDIA — Background + Sponsors/Partners with tabs -->
-    <div class="media-card">
-      <div class="st">🖼 Media & Sponsors</div>
-
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('bg')">🖼
-          Background</button>
-        <button class="tab" onclick="switchTab('title')">🌟 Title
-          Sponsor</button>
-        <button class="tab" onclick="switchTab('sponsor')">⭐ Sponsors</button>
-        <button class="tab" onclick="switchTab('partner')">🤝 Partners</button>
-      </div>
-
-      <!-- Background -->
-      <div class="tab-panel active" id="tab-bg">
-        <div class="sp-type-head">Upload Display Background</div>
-        <input type="file" accept="image/*" id="backgroundInput">
-      </div>
-
-      <!-- Title Sponsor -->
-      <div class="tab-panel" id="tab-title">
-        <div class="sp-type-head">🌟 Title Sponsor — shown largest at
-          bottom</div>
-        <input type="file" accept="image/*" id="titleInput">
-        <div class="slist" id="titleList"></div>
-      </div>
-
-      <!-- Sponsors -->
-      <div class="tab-panel" id="tab-sponsor">
-        <div class="sp-type-head">⭐ Sponsors — shown medium below title</div>
-        <input type="file" accept="image/*" id="sponsorInput">
-        <div class="slist" id="sponsorList"></div>
-      </div>
-
-      <!-- Partners -->
-      <div class="tab-panel" id="tab-partner">
-        <div class="sp-type-head">🤝 Partners — shown smaller below
-          sponsors</div>
-        <input type="file" accept="image/*" id="partnerInput">
-        <div class="slist" id="partnerList"></div>
-      </div>
-    </div>
+    <!--  -->
 
     <script>
     let displayWindow = null;
     let configWindow = null;
-    const socket = io();
+    
+    const socket = io({
+      reconnection: true,
+      reconnectionDelay: 100,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      transports: ['websocket', 'polling']
+    });
+
+    // Handle socket connection events
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      updateConnectionUI(true);
+      // Resend display data when reconnecting
+      send();
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+      updateConnectionUI(false);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      updateConnectionUI(false);
+    });
 
     const COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F59E0B', '#8B5CF6'];
-    const EMOJIS = ['🤖', '👾', '🦾', '🧠', '⚙️'];
-    const MEDALS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-    const MAX_TEAMS = 5;
+    const EMOJIS = ['1', '2', '3', '4', '5','6'];
+    const MEDALS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣','6️⃣'];
+    const MAX_TEAMS = 6;
 
     let teams = [{ id: 1, name: 'Team 1', img: null }, { id: 2, name: 'Team 2', img: null }];
     let finishOrder = [];
@@ -373,7 +358,21 @@
       delete lastPushTimes[id];
       renderTeamPool();
     }
+function clearFinishData() {
+  if (!confirm("Clear all finish times?")) return;
 
+  finishOrder = [];
+  finishTimes = {};
+  finishClocks = {};
+
+  logRows = logRows.filter(
+    row => row.recordType !== "finish"
+  );
+
+  renderFinishList();
+  renderLog();
+  send();
+}
     function renderFinishList() {
       const list = document.getElementById('finishList');
       list.innerHTML = '';
@@ -729,7 +728,13 @@
         console.warn('Could not save display state', err);
       }
 
-      socket.emit('display-update', payload);
+      // Send via socket.io
+      if (socket && socket.connected) {
+        socket.emit('display-update', payload);
+        console.log('Display update sent via socket.io');
+      } else {
+        console.warn('Socket not connected, updates will be sent when reconnected');
+      }
 
       saveState();
     }

@@ -6,7 +6,20 @@ const { SerialPort } = require("serialport")
 const { ReadlineParser } = require("@serialport/parser-readline")
 const app = express()
 const server = http.createServer(app)
-const io = new Server(server)
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["*"],
+    credentials: true
+  },
+  maxHttpBufferSize: 50 * 1024 * 1024, // 50 MB
+  reconnection: true,
+  reconnectionDelay: 100,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 5
+  
+})
 
 app.use(express.static(__dirname))
 
@@ -66,7 +79,7 @@ function emitButtonStateSnapshot(target = io) {
 function scheduleReconnect(reason) {
   if (isShuttingDown || reconnectTimer || (port && port.isOpen)) return
 
-  console.log(`Serial reconnect scheduled (${reason}) in ${RECONNECT_DELAY_MS}ms`)
+  // console.log(`Serial reconnect scheduled (${reason}) in ${RECONNECT_DELAY_MS}ms`)
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
     openSerial("retry")
@@ -163,13 +176,20 @@ function handleSerialData(data) {
 }
 
 io.on("connection", (socket) => {
-  console.log("User connected")
+  const socketId = socket.id
+  console.log("User connected:", socketId)
 
   // Sync current state for newly connected clients.
   socket.emit("arduino-status", Boolean(port && port.isOpen))
   socket.emit("serial-info", { path: SERIAL_PATH, open: Boolean(port && port.isOpen) })
   socket.emit("update", latestButtonState)
   socket.emit("button-state-update", Object.values(buttonStates))
+  
+  // Send current display data when new client connects (important for OBS/display screens)
+  if (displayData && Object.keys(displayData).length > 0) {
+    socket.emit("display-update", displayData)
+    console.log("Sent display data to", socketId)
+  }
 
   socket.on("toggle", (data) => {
     latestButtonState = Boolean(data)
@@ -177,7 +197,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    console.log("User disconnected")
+    console.log("User disconnected:", socketId)
   })
 
   socket.on('set-serial', (data) => {
@@ -196,14 +216,15 @@ io.on("connection", (socket) => {
       setTimeout(() => openSerial('manual-change'), 200)
     })
   })
-  // send current display data when new client connects (important for OBS)
-socket.emit("display-update", displayData)
 
-// receive updates from control
-socket.on("display-update", (data) => {
-  displayData = data
-  io.emit("display-update", data)
-})
+  // Receive updates from control panel
+  socket.on("display-update", (data) => {
+    if (!data) return
+    displayData = data
+    console.log("Display update received, broadcasting to all clients")
+    // Broadcast to ALL connected clients (including OBS, display screens, etc.)
+    io.emit("display-update", data)
+  })
 })
 
 openSerial("startup")

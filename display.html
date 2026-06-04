@@ -8,6 +8,7 @@
       rel="stylesheet">
     <link rel="stylesheet" href="/style/display.css">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body>
 
@@ -68,20 +69,22 @@
 
     <!-- TOP BAR -->
     <div class="top-bar">
-      <div class="event-label" id="eventLabel">Robot Think · Competition ·
+      <div class="event-label !text-5xl" id="eventLabel">Robot Think ·
+        Competition ·
         2026</div>
-      <div class="round-pill" id="roundPill">Round 1 · Qualifying</div>
+      <div class="round-pill !text-2xl" id="roundPill">Round 1 ·
+        Qualifying</div>
     </div>
 
     <!-- TIMER -->
     <div class="timer-wrap">
-      <div class="timer-lbl">⏱ Match Time</div>
-      <div class="timer-val" id="timerVal">10:00</div>
+      <div class="timer-lbl !text-md">⏱ Match Time</div>
+      <div class="timer-val !text-7xl" id="timerVal">10:00</div>
     </div>
 
     <!-- TEAMS -->
-    <div id="teams-area">
-      <div id="teams-grid"></div>
+    <div class="!mt-0" id="teams-area">
+      <div class="!mt-0" id="teams-grid"></div>
     </div>
 
     <!-- BOTTOM SPONSOR BAR — single row, 3 cols -->
@@ -103,7 +106,7 @@
     </div>
 
     <script>
-const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣'];
+const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
 const CC=['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6','#EC4899','#F97316'];
     const DISPLAY_STATE_KEY = 'robothink-display-state';
 let prevFO=[];
@@ -298,7 +301,53 @@ function applyDisplayState(d) {
   setLogos('colSponsor','logosSponsor',d.sponsors);
   setLogos('colPartner','logosPartner',d.partners);
 }
+const socket = io({
+  reconnection: true,
+  reconnectionDelay: 100,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: Infinity,
+  transports: ['websocket', 'polling']
+});
 
+socket.on('connect', () => {
+  console.log('Socket connected');
+});
+
+socket.on('disconnect', () => {
+  console.log('Socket disconnected');
+});
+
+socket.on('connect_error', (error) => {
+  console.error('Socket connection error:', error);
+});
+
+socket.on("display-update", (d) => {
+  console.log('Display update received:', d);
+  if (d && Object.keys(d).length > 0) {
+    applyDisplayState(d);
+  }
+});
+
+socket.on("button-update", (data) => {
+  console.log('Button update received:', data);
+  applyButtonState(data);
+
+  if (lastTeams.length) {
+    renderTeams(lastTeams, lastFinishOrder);
+  }
+});
+
+socket.on("button-state-update", (states) => {
+  console.log('Button state update received:', states);
+  Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
+  Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
+
+  (states || []).forEach(applyButtonState);
+
+  if (lastTeams.length) {
+    renderTeams(lastTeams, lastFinishOrder);
+  }
+});
 function loadSharedDisplayState() {
   try {
     const raw = localStorage.getItem(DISPLAY_STATE_KEY);
@@ -317,33 +366,24 @@ window.addEventListener('storage', (event) => {
     console.warn('Could not apply shared display state', err);
   }
 });
-
-const socket = io();
-
-socket.on("display-update", (d) => {
-  applyDisplayState(d);
-});
-
-socket.on("button-update", (data) => {
-  applyButtonState(data);
-
-  if (lastTeams.length) {
-    renderTeams(lastTeams, lastFinishOrder);
-  }
-});
-
-socket.on("button-state-update", (states) => {
-  Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
-  Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
-
-  (states || []).forEach(applyButtonState);
-
-  if (lastTeams.length) {
-    renderTeams(lastTeams, lastFinishOrder);
-  }
-});
-
 loadSharedDisplayState();
+
+// Fallback: poll for changes from localStorage every 500ms if socket isn't working
+setInterval(() => {
+  if (!socket.connected) {
+    try {
+      const raw = localStorage.getItem(DISPLAY_STATE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && Object.keys(data).length > 0) {
+          applyDisplayState(data);
+        }
+      }
+    } catch (err) {
+      // Silent fallback
+    }
+  }
+}, 500);
 
 </script>
   </body>
