@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scoreboard Control Panel</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #050a0f;
+        --panel: #0a1520;
+        --border: #1a2f45;
+        --blue: #00d4ff;
+        --blue-dim: #003d55;
+        --blue-glow: rgba(0, 212, 255, 0.35);
+        --red: #ff2d55;
+        --red-dim: #550010;
+        --red-glow: rgba(255, 45, 85, 0.35);
+        --gold: #ffd700;
+        --text: #e0f0ff;
+        --text-dim: #5a7a9a;
+        --font-head: "Orbitron", monospace;
+        --font-mono: "Share Tech Mono", monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-mono);
+        min-height: 100vh;
+        overflow-x: hidden;
+        background-image:
+          radial-gradient(
+            ellipse 80% 50% at 50% -20%,
+            rgba(0, 212, 255, 0.06) 0%,
+            transparent 70%
+          ),
+          linear-gradient(180deg, #050a0f 0%, #030609 100%);
+      }
+
+      /* Scanline overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.08) 3px,
+          rgba(0, 0, 0, 0.08) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      .header {
+        text-align: center;
+        padding: 24px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+      .header::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--blue),
+          transparent
+        );
+        box-shadow: 0 0 12px var(--blue);
+      }
+
+      .header-title {
+        font-family: var(--font-head);
+        font-size: clamp(12px, 2vw, 18px);
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        color: var(--blue);
+        text-shadow:
+          0 0 20px var(--blue),
+          0 0 40px var(--blue-glow);
+        text-transform: uppercase;
+      }
+      .header-sub {
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.15em;
+        margin-top: 4px;
+      }
+
+      .meta-bar {
+        display: flex;
+        gap: 12px;
+        padding: 14px 20px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .meta-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-width: 140px;
+      }
+      .meta-label {
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
+      .meta-input {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--font-head);
+        font-size: 13px;
+        padding: 6px 10px;
+        outline: none;
+        border-radius: 2px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        width: 100%;
+      }
+      .meta-input:focus {
+        border-color: var(--blue);
+        box-shadow:
+          0 0 10px var(--blue-glow),
+          inset 0 0 8px rgba(0, 212, 255, 0.04);
+      }
+
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        padding: 0;
+      }
+
+      .team-panel {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+      .team-panel.blue {
+        border-right: 1px solid var(--border);
+      }
+
+      .team-panel.blue::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--blue),
+          transparent
+        );
+        box-shadow: 0 0 14px var(--blue);
+      }
+      .team-panel.red::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--red),
+          transparent
+        );
+        box-shadow: 0 0 14px var(--red);
+      }
+
+      .team-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .team-avatar-wrap {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .team-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 4px;
+        object-fit: cover;
+        border: 2px solid var(--border);
+        transition: border-color 0.2s;
+        background: var(--panel);
+        display: block;
+      }
+      .blue .team-avatar {
+        border-color: var(--blue-dim);
+      }
+      .red .team-avatar {
+        border-color: var(--red-dim);
+      }
+      .team-avatar-wrap:hover .team-avatar {
+        border-color: var(--blue);
+        box-shadow: 0 0 10px var(--blue-glow);
+      }
+      .red .team-avatar-wrap:hover .team-avatar {
+        border-color: var(--red);
+        box-shadow: 0 0 10px var(--red-glow);
+      }
+      .avatar-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s;
+        border-radius: 4px;
+      }
+      .team-avatar-wrap:hover .avatar-overlay {
+        opacity: 1;
+      }
+      input[type="file"] {
+        display: none;
+      }
+
+      .team-name-input {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        font-family: var(--font-head);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        padding: 4px 0;
+        outline: none;
+        width: 100%;
+        text-transform: uppercase;
+        transition: border-color 0.2s;
+      }
+      .blue .team-name-input {
+        color: var(--blue);
+        text-shadow: 0 0 12px var(--blue-glow);
+      }
+      .red .team-name-input {
+        color: var(--red);
+        text-shadow: 0 0 12px var(--red-glow);
+      }
+      .blue .team-name-input:focus {
+        border-color: var(--blue);
+        box-shadow: 0 2px 0 var(--blue);
+      }
+      .red .team-name-input:focus {
+        border-color: var(--red);
+        box-shadow: 0 2px 0 var(--red);
+      }
+
+      .score-display {
+        text-align: center;
+        margin: 10px 0;
+        font-family: var(--font-head);
+        font-size: clamp(44px, 8vw, 80px);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        transition: text-shadow 0.15s;
+      }
+      .blue .score-display {
+        color: var(--blue);
+        text-shadow:
+          0 0 30px var(--blue),
+          0 0 60px var(--blue-glow);
+      }
+      .red .score-display {
+        color: var(--red);
+        text-shadow:
+          0 0 30px var(--red),
+          0 0 60px var(--red-glow);
+      }
+
+      .score-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .score-btn {
+        position: relative;
+        padding: 10px 6px;
+        font-family: var(--font-head);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.12s;
+        overflow: hidden;
+      }
+      .score-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.12s;
+      }
+      .score-btn:active {
+        transform: scale(0.95);
+      }
+
+      .blue .score-btn.add {
+        color: var(--blue);
+        border-color: var(--blue-dim);
+        text-shadow: 0 0 8px var(--blue-glow);
+      }
+      .blue .score-btn.add::before {
+        background: var(--blue-dim);
+      }
+      .blue .score-btn.add:hover {
+        border-color: var(--blue);
+        box-shadow:
+          0 0 14px var(--blue-glow),
+          inset 0 0 10px rgba(0, 212, 255, 0.08);
+      }
+      .blue .score-btn.add:hover::before {
+        opacity: 1;
+      }
+
+      .blue .score-btn.sub {
+        color: #557799;
+        border-color: #1a2f45;
+      }
+      .blue .score-btn.sub:hover {
+        color: var(--blue);
+        border-color: var(--blue-dim);
+      }
+
+      .red .score-btn.add {
+        color: var(--red);
+        border-color: var(--red-dim);
+        text-shadow: 0 0 8px var(--red-glow);
+      }
+      .red .score-btn.add::before {
+        background: var(--red-dim);
+      }
+      .red .score-btn.add:hover {
+        border-color: var(--red);
+        box-shadow:
+          0 0 14px var(--red-glow),
+          inset 0 0 10px rgba(255, 45, 85, 0.08);
+      }
+      .red .score-btn.add:hover::before {
+        opacity: 1;
+      }
+
+      .red .score-btn.sub {
+        color: #774455;
+        border-color: #2f1a20;
+      }
+      .red .score-btn.sub:hover {
+        color: var(--red);
+        border-color: var(--red-dim);
+      }
+
+      .btn-label {
+        position: relative;
+        z-index: 1;
+      }
+
+      .footer-bar {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        font-family: var(--font-head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        padding: 9px 18px;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.15s;
+      }
+
+      .btn-open {
+        color: var(--gold);
+        border-color: rgba(255, 215, 0, 0.4);
+      }
+      .btn-open:hover {
+        background: rgba(255, 215, 0, 0.08);
+        box-shadow: 0 0 14px rgba(255, 215, 0, 0.3);
+        border-color: var(--gold);
+      }
+
+      .btn-reset {
+        color: #ff6b35;
+        border-color: rgba(255, 107, 53, 0.4);
+      }
+      .btn-reset:hover {
+        background: rgba(255, 107, 53, 0.08);
+        box-shadow: 0 0 14px rgba(255, 107, 53, 0.3);
+        border-color: #ff6b35;
+      }
+
+      .status-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blue);
+        box-shadow: 0 0 8px var(--blue);
+        animation: pulse 2s ease-in-out infinite;
+        margin-right: 6px;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .status-text {
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
+
+      .score-bump {
+        animation: bump 0.2s ease-out;
+      }
+      @keyframes bump {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .divider-mid {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 8px;
+        background: var(--panel);
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.2em;
+        border-bottom: 1px solid var(--border);
+      }
+
+      @media (max-width: 540px) {
+        .main {
+          grid-template-columns: 1fr;
+        }
+        .team-panel.blue {
+          border-right: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-title">⬡ Scoreboard Control Panel ⬡</div>
+      <div class="header-sub">
+        <span class="status-dot"></span>LIVE SYNC ACTIVE — FOLLOW LINE ROBOT
+        COMPETITION
+      </div>
+    </header>
+
+    <div class="meta-bar">
+      <div class="meta-group">
+        <div class="meta-label">Competition Name</div>
+        <input
+          class="meta-input"
+          id="compName"
+          type="text"
+          placeholder="e.g. Regional Championship"
+          maxlength="50"
+        />
+      </div>
+      <div class="meta-group" style="max-width: 120px">
+        <div class="meta-label">Round No.</div>
+        <input
+          class="meta-input"
+          id="roundNum"
+          type="number"
+          placeholder="1"
+          min="1"
+          max="99"
+        />
+      </div>
+      <div class="meta-group" style="max-width: 160px">
+        <div class="meta-label">Round Label</div>
+        <input
+          class="meta-input"
+          id="roundLabel"
+          type="text"
+          placeholder="e.g. FINAL"
+          maxlength="20"
+        />
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- BLUE TEAM -->
+      <div class="team-panel blue" id="bluePanel">
+        <div class="team-header">
+          <div
+            class="team-avatar-wrap"
+            onclick="document.getElementById('blueImgInput').click()"
+          >
+            <img
+              class="team-avatar"
+              id="blueAvatar"
+              src=""
+              alt="Blue Team"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23003d55%22 width=%2256%22 height=%2256%22/><text x=%2228%22 y=%2236%22 text-anchor=%22middle%22 fill=%2200d4ff%22 font-size=%2224%22>B</text></svg>'
+              "
+            />
+            <div class="avatar-overlay">CHANGE</div>
+            <input
+              type="file"
+              id="blueImgInput"
+              accept="image/*"
+              onchange="handleImg('blue', this)"
+            />
+          </div>
+          <input
+            class="team-name-input"
+            id="blueName"
+            type="text"
+            placeholder="BLUE TEAM"
+            maxlength="20"
+          />
+        </div>
+        <div class="score-display" id="blueScore">0</div>
+        <div class="score-buttons">
+          <button class="score-btn add" onclick="adjustScore('blue', 1)">
+            <span class="btn-label">+1</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 2)">
+            <span class="btn-label">+2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 4)">
+            <span class="btn-label">+4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -1)">
+            <span class="btn-label">−1</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -2)">
+            <span class="btn-label">−2</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -4)">
+            <span class="btn-label">−4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RED TEAM -->
+      <div class="team-panel red" id="redPanel">
+        <div class="team-header">
+          <div
+            class="team-avatar-wrap"
+            onclick="document.getElementById('redImgInput').click()"
+          >
+            <img
+              class="team-avatar"
+              id="redAvatar"
+              src=""
+              alt="Red Team"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23550010%22 width=%2256%22 height=%2256%22/><text x=%2228%22 y=%2236%22 text-anchor=%22middle%22 fill=%22ff2d55%22 font-size=%2224%22>R</text></svg>'
+              "
+            />
+            <div class="avatar-overlay">CHANGE</div>
+            <input
+              type="file"
+              id="redImgInput"
+              accept="image/*"
+              onchange="handleImg('red', this)"
+            />
+          </div>
+          <input
+            class="team-name-input"
+            id="redName"
+            type="text"
+            placeholder="RED TEAM"
+            maxlength="20"
+          />
+        </div>
+        <div class="score-display" id="redScore">0</div>
+        <div class="score-buttons">
+          <button class="score-btn add" onclick="adjustScore('red', 1)">
+            <span class="btn-label">+1</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 2)">
+            <span class="btn-label">+2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 4)">
+            <span class="btn-label">+4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -1)">
+            <span class="btn-label">−1</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -2)">
+            <span class="btn-label">−2</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -4)">
+            <span class="btn-label">−4</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span
+          class="status-dot"
+          style="background: #22ff88; box-shadow: 0 0 8px #22ff88"
+        ></span>
+        <span class="status-text"
+          >AUTO-SAVE ON · DISPLAY SYNCS EVERY 500MS</span
+        >
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button class="action-btn btn-open" onclick="openDisplay()">
+          ⬡ OPEN DISPLAY
+        </button>
+        <button class="action-btn btn-reset" onclick="resetAll()">
+          ↺ RESET ALL
+        </button>
+        <button class="action-btn btn-open" onclick="openDisplay()">
+          ⬡ OPEN DISPLAY
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const STATE_KEY = "flr_scoreboard";
+      let displayWin = null;
+
+      const defaultState = () => ({
+        blueScore: 0,
+        redScore: 0,
+        blueName: "BLUE TEAM",
+        redName: "RED TEAM",
+        blueImg: "",
+        redImg: "",
+        compName: "Tech Bot Competition",
+        roundNum: 1,
+        roundLabel: "QUALIFICATION",
+      });
+
+      function load() {
+        try {
+          return JSON.parse(localStorage.getItem(STATE_KEY)) || defaultState();
+        } catch {
+          return defaultState();
+        }
+      }
+
+      function save(state) {
+        localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      }
+
+      function getState() {
+        return {
+          blueScore:
+            parseInt(document.getElementById("blueScore").textContent) || 0,
+          redScore:
+            parseInt(document.getElementById("redScore").textContent) || 0,
+          blueName: document.getElementById("blueName").value || "BLUE TEAM",
+          redName: document.getElementById("redName").value || "RED TEAM",
+          blueImg: document.getElementById("blueAvatar").src,
+          redImg: document.getElementById("redAvatar").src,
+          compName: document.getElementById("compName").value,
+          roundNum: document.getElementById("roundNum").value,
+          roundLabel: document.getElementById("roundLabel").value,
+        };
+      }
+
+      function applyState(s) {
+        document.getElementById("blueScore").textContent = s.blueScore;
+        document.getElementById("redScore").textContent = s.redScore;
+        document.getElementById("blueName").value = s.blueName;
+        document.getElementById("redName").value = s.redName;
+        if (s.blueImg) document.getElementById("blueAvatar").src = s.blueImg;
+        if (s.redImg) document.getElementById("redAvatar").src = s.redImg;
+        document.getElementById("compName").value = s.compName || "";
+        document.getElementById("roundNum").value = s.roundNum || "";
+        document.getElementById("roundLabel").value = s.roundLabel || "";
+      }
+
+      function adjustScore(team, delta) {
+        const el = document.getElementById(team + "Score");
+        let val = parseInt(el.textContent) + delta;
+        if (val < 0) val = 0;
+        el.textContent = val;
+        el.classList.remove("score-bump");
+        void el.offsetWidth;
+        el.classList.add("score-bump");
+        persist();
+      }
+
+      function persist() {
+        save(getState());
+      }
+
+      function handleImg(team, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById(team + "Avatar").src = e.target.result;
+          persist();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function resetAll() {
+        if (!confirm("Reset all scores and settings?")) return;
+        const s = defaultState();
+        applyState(s);
+        save(s);
+      }
+
+      function openDisplay() {
+        const url = "tech-bot-display.html";
+        if (displayWin && !displayWin.closed) {
+          displayWin.focus();
+        } else {
+          displayWin = window.open(
+            url,
+            "TechBotDisplay",
+            "width=1280,height=720,menubar=no,toolbar=no,location=no",
+          );
+        }
+      }
+
+      // Wire up live save on all inputs
+      ["compName", "roundNum", "roundLabel", "blueName", "redName"].forEach(
+        (id) => {
+          document.getElementById(id).addEventListener("input", persist);
+        },
+      );
+
+      // Init
+      applyState(load());
+
+      // Broadcast save trigger every 500ms to keep display fresh
+      setInterval(() => {
+        save(getState());
+      }, 500);
+    </script>
+  </body>
+</html>

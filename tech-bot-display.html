@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scoreboard Display</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #040810;
+        --blue: #00d4ff;
+        --blue-dim: rgba(0, 212, 255, 0.12);
+        --blue-glow: rgba(0, 212, 255, 0.5);
+        --red: #ff2d55;
+        --red-dim: rgba(255, 45, 85, 0.12);
+        --red-glow: rgba(255, 45, 85, 0.5);
+        --gold: #ffd700;
+        --white: #e8f4ff;
+        --dim: #3a5a7a;
+        --font-head: "Orbitron", monospace;
+        --font-mono: "Share Tech Mono", monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font-mono);
+        position: relative;
+
+        background-image:
+          radial-gradient(
+            ellipse 100% 60% at 50% 110%,
+            rgba(0, 212, 255, 0.04) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 20% 50%,
+            rgba(0, 212, 255, 0.03) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 80% 50%,
+            rgba(255, 45, 85, 0.03) 0%,
+            transparent 60%
+          );
+      }
+
+      /* Scanlines */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.06) 3px,
+          rgba(0, 0, 0, 0.06) 4px
+        );
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      /* Corner decorations */
+      .corner {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        z-index: 50;
+      }
+      .corner.tl {
+        top: 12px;
+        left: 12px;
+        border-top: 2px solid var(--blue);
+        border-left: 2px solid var(--blue);
+        box-shadow: -4px -4px 20px var(--blue-glow);
+      }
+      .corner.tr {
+        top: 12px;
+        right: 12px;
+        border-top: 2px solid var(--red);
+        border-right: 2px solid var(--red);
+        box-shadow: 4px -4px 20px var(--red-glow);
+      }
+      .corner.bl {
+        bottom: 12px;
+        left: 12px;
+        border-bottom: 2px solid var(--blue);
+        border-left: 2px solid var(--blue);
+        box-shadow: -4px 4px 20px var(--blue-glow);
+      }
+      .corner.br {
+        bottom: 12px;
+        right: 12px;
+        border-bottom: 2px solid var(--red);
+        border-right: 2px solid var(--red);
+        box-shadow: 4px 4px 20px var(--red-glow);
+      }
+
+      /* TOP INFO BAR */
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 20px 60px 12px;
+        position: relative;
+      }
+
+      .comp-name {
+        font-family: var(--font-head);
+        font-size: clamp(14px, 2.2vw, 26px);
+        font-weight: 900;
+        letter-spacing: 0.3em;
+        color: var(--white);
+        text-transform: uppercase;
+        text-shadow: 0 0 20px rgba(232, 244, 255, 0.4);
+      }
+
+      .round-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 6px;
+      }
+      .round-chip {
+        font-family: var(--font-head);
+        font-size: clamp(9px, 1.2vw, 13px);
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: var(--gold);
+        border: 1px solid rgba(255, 215, 0, 0.4);
+        padding: 3px 12px;
+        background: rgba(255, 215, 0, 0.05);
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+      }
+      .round-num {
+        font-size: clamp(9px, 1.2vw, 13px);
+        color: var(--dim);
+        letter-spacing: 0.15em;
+      }
+
+      /* MAIN SCOREBOARD */
+      .scoreboard {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0 40px;
+        gap: 0;
+      }
+
+      /* TEAM SIDE */
+      .team {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 20px;
+        position: relative;
+      }
+
+      .team-logo {
+        width: clamp(70px, 10vw, 130px);
+        height: clamp(70px, 10vw, 130px);
+        border-radius: 6px;
+        object-fit: cover;
+        border: 2px solid;
+        position: relative;
+      }
+      .team.blue .team-logo {
+        border-color: var(--blue);
+        box-shadow:
+          0 0 20px var(--blue-glow),
+          0 0 60px rgba(0, 212, 255, 0.15),
+          inset 0 0 20px rgba(0, 212, 255, 0.05);
+        filter: drop-shadow(0 0 10px var(--blue));
+      }
+      .team.red .team-logo {
+        border-color: var(--red);
+        box-shadow:
+          0 0 20px var(--red-glow),
+          0 0 60px rgba(255, 45, 85, 0.15),
+          inset 0 0 20px rgba(255, 45, 85, 0.05);
+        filter: drop-shadow(0 0 10px var(--red));
+      }
+
+      .team-name {
+        font-family: var(--font-head);
+        font-size: clamp(14px, 2.5vw, 30px);
+        font-weight: 900;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        text-align: center;
+      }
+      .team.blue .team-name {
+        color: var(--blue);
+        text-shadow:
+          0 0 20px var(--blue),
+          0 0 40px var(--blue-glow);
+      }
+      .team.red .team-name {
+        color: var(--red);
+        text-shadow:
+          0 0 20px var(--red),
+          0 0 40px var(--red-glow);
+      }
+
+      /* Score glow bars behind score */
+      .score-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .score-glow-bg {
+        position: absolute;
+        inset: -20px -30px;
+        border-radius: 8px;
+        opacity: 0.08;
+        transition: opacity 0.3s;
+      }
+      .team.blue .score-glow-bg {
+        background: var(--blue);
+        box-shadow: 0 0 60px var(--blue);
+      }
+      .team.red .score-glow-bg {
+        background: var(--red);
+        box-shadow: 0 0 60px var(--red);
+      }
+
+      .score {
+        font-family: var(--font-head);
+        font-size: clamp(70px, 14vw, 160px);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        position: relative;
+        z-index: 1;
+        transition:
+          transform 0.15s,
+          text-shadow 0.15s;
+      }
+      .team.blue .score {
+        color: var(--blue);
+        text-shadow:
+          0 0 40px var(--blue),
+          0 0 80px var(--blue-glow),
+          0 0 120px rgba(0, 212, 255, 0.2);
+      }
+      .team.red .score {
+        color: var(--red);
+        text-shadow:
+          0 0 40px var(--red),
+          0 0 80px var(--red-glow),
+          0 0 120px rgba(255, 45, 85, 0.2);
+      }
+
+      .score.bump {
+        animation: scoreBump 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+      }
+      @keyframes scoreBump {
+        0% {
+          transform: scale(1);
+        }
+        35% {
+          transform: scale(1.18);
+        }
+        65% {
+          transform: scale(0.96);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* MIDDLE DIVIDER */
+      .middle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 0 20px;
+        position: relative;
+      }
+
+      .vs-label {
+        font-family: var(--font-head);
+        font-size: clamp(14px, 2vw, 24px);
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        color: rgba(232, 244, 255, 0.15);
+        text-shadow: 0 0 20px rgba(232, 244, 255, 0.1);
+      }
+
+      .divider-line {
+        width: 2px;
+        height: 80px;
+        background: linear-gradient(
+          180deg,
+          transparent,
+          var(--dim),
+          transparent
+        );
+      }
+
+      .leading-badge {
+        font-family: var(--font-head);
+        font-size: clamp(7px, 0.9vw, 10px);
+        letter-spacing: 0.2em;
+        padding: 4px 10px;
+        border: 1px solid;
+        text-transform: uppercase;
+        transition: all 0.4s;
+      }
+      .leading-badge.blue {
+        color: var(--blue);
+        border-color: var(--blue);
+        background: var(--blue-dim);
+        box-shadow: 0 0 12px var(--blue-glow);
+        text-shadow: 0 0 8px var(--blue);
+      }
+      .leading-badge.red {
+        color: var(--red);
+        border-color: var(--red);
+        background: var(--red-dim);
+        box-shadow: 0 0 12px var(--red-glow);
+        text-shadow: 0 0 8px var(--red);
+      }
+      .leading-badge.tie {
+        color: var(--gold);
+        border-color: var(--gold);
+        background: rgba(255, 215, 0, 0.05);
+        box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+        text-shadow: 0 0 8px var(--gold);
+      }
+
+      /* BOTTOM BAR */
+      .bottom-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 60px 16px;
+        gap: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        position: relative;
+      }
+      .bottom-bar::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+      }
+
+      .ticker {
+        font-size: clamp(8px, 1vw, 11px);
+        color: var(--dim);
+        letter-spacing: 0.15em;
+        font-family: var(--font-mono);
+      }
+      .ticker span {
+        color: rgba(255, 255, 255, 0.25);
+      }
+
+      .live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22ff88;
+        box-shadow: 0 0 10px #22ff88;
+        animation: livePulse 1.5s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+      @keyframes livePulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.8);
+        }
+      }
+
+      .clock {
+        font-family: var(--font-head);
+        font-size: clamp(10px, 1.2vw, 14px);
+        color: var(--dim);
+        letter-spacing: 0.1em;
+      }
+
+      /* horizontal bar at bottom of each team panel */
+      .team-bar {
+        position: absolute;
+        bottom: 0;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        border-radius: 1px;
+        transition: width 0.5s;
+      }
+      .team.blue .team-bar {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--blue),
+          transparent
+        );
+        box-shadow: 0 0 10px var(--blue);
+      }
+      .team.red .team-bar {
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--red),
+          transparent
+        );
+        box-shadow: 0 0 10px var(--red);
+      }
+
+      /* Scroll ticker at very top */
+      .ticker-strip {
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          var(--blue),
+          var(--red),
+          var(--blue)
+        );
+        background-size: 200% 100%;
+        animation: shiftGrad 4s linear infinite;
+      }
+      @keyframes shiftGrad {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 200% 0%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ticker-strip"></div>
+
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="top-bar">
+      <div class="comp-name" id="dispCompName">FOLLOW LINE ROBOT CUP</div>
+      <div class="round-row">
+        <div class="round-chip" id="dispRoundLabel">QUALIFICATION</div>
+        <div class="round-num" id="dispRoundNum">ROUND · 1</div>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <!-- BLUE -->
+      <div class="team blue">
+        <img
+          class="team-logo"
+          id="dispBlueImg"
+          src=""
+          alt="Blue"
+          onerror="
+            this.src =
+              'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22><rect fill=%22%23003d55%22 width=%22120%22 height=%22120%22/><text x=%2260%22 y=%2278%22 text-anchor=%22middle%22 fill=%2200d4ff%22 font-size=%2256%22 font-family=%22monospace%22>B</text></svg>'
+          "
+        />
+        <div class="team-name" id="dispBlueName">BLUE TEAM</div>
+        <div class="score-wrap">
+          <div class="score-glow-bg"></div>
+          <div class="score" id="dispBlueScore">0</div>
+        </div>
+        <div class="team-bar"></div>
+      </div>
+
+      <!-- MIDDLE -->
+      <div class="middle">
+        <div class="divider-line"></div>
+        <div class="vs-label">VS</div>
+        <div class="leading-badge tie" id="leadBadge">TIED</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- RED -->
+      <div class="team red">
+        <img
+          class="team-logo"
+          id="dispRedImg"
+          src=""
+          alt="Red"
+          onerror="
+            this.src =
+              'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22><rect fill=%22%23550010%22 width=%22120%22 height=%22120%22/><text x=%2260%22 y=%2278%22 text-anchor=%22middle%22 fill=%22ff2d55%22 font-size=%2256%22 font-family=%22monospace%22>R</text></svg>'
+          "
+        />
+        <div class="team-name" id="dispRedName">RED TEAM</div>
+        <div class="score-wrap">
+          <div class="score-glow-bg"></div>
+          <div class="score" id="dispRedScore">0</div>
+        </div>
+        <div class="team-bar"></div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="live-dot"></div>
+      <div class="ticker">
+        FOLLOW LINE ROBOT COMPETITION · <span id="dispCompTicker">LIVE</span>
+      </div>
+      <div class="clock" id="clock">00:00:00</div>
+    </div>
+
+    <script>
+      const STATE_KEY = "flr_scoreboard";
+      let prevState = {};
+
+      function readState() {
+        try {
+          return JSON.parse(localStorage.getItem(STATE_KEY)) || {};
+        } catch {
+          return {};
+        }
+      }
+
+      function bumpEl(el) {
+        el.classList.remove("bump");
+        void el.offsetWidth;
+        el.classList.add("bump");
+        setTimeout(() => el.classList.remove("bump"), 300);
+      }
+
+      function update() {
+        const s = readState();
+        if (!s.blueScore && s.blueScore !== 0) return;
+
+        const blueScoreEl = document.getElementById("dispBlueScore");
+        const redScoreEl = document.getElementById("dispRedScore");
+
+        if (s.blueScore !== prevState.blueScore) {
+          blueScoreEl.textContent = s.blueScore;
+          bumpEl(blueScoreEl);
+        }
+        if (s.redScore !== prevState.redScore) {
+          redScoreEl.textContent = s.redScore;
+          bumpEl(redScoreEl);
+        }
+
+        if (s.blueName !== prevState.blueName)
+          document.getElementById("dispBlueName").textContent =
+            s.blueName || "BLUE TEAM";
+        if (s.redName !== prevState.redName)
+          document.getElementById("dispRedName").textContent =
+            s.redName || "RED TEAM";
+        if (s.blueImg !== prevState.blueImg && s.blueImg)
+          document.getElementById("dispBlueImg").src = s.blueImg;
+        if (s.redImg !== prevState.redImg && s.redImg)
+          document.getElementById("dispRedImg").src = s.redImg;
+
+        const cn = s.compName || "FOLLOW LINE ROBOT CUP";
+        if (s.compName !== prevState.compName) {
+          document.getElementById("dispCompName").textContent = cn;
+          document.getElementById("dispCompTicker").textContent = cn;
+        }
+        if (s.roundNum !== prevState.roundNum)
+          document.getElementById("dispRoundNum").textContent =
+            "ROUND · " + (s.roundNum || "1");
+        if (s.roundLabel !== prevState.roundLabel)
+          document.getElementById("dispRoundLabel").textContent = (
+            s.roundLabel || "QUALIFICATION"
+          ).toUpperCase();
+
+        // Leading badge
+        const badge = document.getElementById("leadBadge");
+        const bs = parseInt(s.blueScore) || 0;
+        const rs = parseInt(s.redScore) || 0;
+        if (bs > rs) {
+          badge.textContent = (s.blueName || "BLUE") + " LEADS";
+          badge.className = "leading-badge blue";
+        } else if (rs > bs) {
+          badge.textContent = (s.redName || "RED") + " LEADS";
+          badge.className = "leading-badge red";
+        } else {
+          badge.textContent = "TIED";
+          badge.className = "leading-badge tie";
+        }
+
+        prevState = { ...s };
+      }
+
+      // Clock
+      function updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        const sec = String(now.getSeconds()).padStart(2, "0");
+        document.getElementById("clock").textContent = h + ":" + m + ":" + sec;
+      }
+
+      setInterval(update, 400);
+      setInterval(updateClock, 1000);
+      update();
+      updateClock();
+    </script>
+  </body>
+</html>
