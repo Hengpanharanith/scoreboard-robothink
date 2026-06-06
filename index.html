@@ -1,6 +1,8 @@
 ﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8" />
     <meta charset="UTF-8" />
     <title>RoboRace Control</title>
     <link
@@ -8,7 +10,44 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/style/index.css" />
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style/index.css" />
     <style>
+      .connection-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 18px;
+        background: #f3f4f6;
+        color: #111;
+        font-weight: 700;
+        font-size: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .connection-pill .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ef4444;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+      }
+      .connection-pill.connected .status-dot {
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
+      }
+      #comPortInput {
+        margin-left: 10px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        color: #111;
+        font-weight: 600;
+        width: 90px;
+      }
+    </style>
       .connection-pill {
         display: inline-flex;
         align-items: center;
@@ -53,11 +92,19 @@
       <div>
         <h1>RoboRace Control</h1>
         <div class="sub">Finish Order Tracker · Operator Panel</div>
+        <div class="sub">Finish Order Tracker · Operator Panel</div>
       </div>
       <div class="live-badge">
         <div class="ld"></div>
         LIVE
+        <div class="ld"></div>
+        LIVE
       </div>
+      <div
+        id="connection-pill"
+        class="connection-pill"
+        style="margin-left: 10px"
+      >
       <div
         id="connection-pill"
         class="connection-pill"
@@ -67,6 +114,13 @@
         <span id="connection-text">Disconnected</span>
       </div>
       <input id="comPortInput" type="text" value title="COM port (editable)" />
+      <button
+        id="applyComBtn"
+        class="open-btn"
+        style="margin-left: 6px; padding: 6px 8px"
+        onclick="applyComPort()"
+      >
+        Apply
       <button
         id="applyComBtn"
         class="open-btn"
@@ -121,6 +175,37 @@
             style="width: 140px"
           />
         </div>
+        <div class="fg">
+          <label>Event Name</label
+          ><input
+            type="text"
+            id="eventName"
+            value="Robot Think 2026"
+            oninput="send()"
+            style="width: 190px"
+          />
+        </div>
+        <div class="fg">
+          <label>Round #</label
+          ><input
+            type="number"
+            id="roundNum"
+            value="1"
+            min="1"
+            style="width: 70px"
+            oninput="send()"
+          />
+        </div>
+        <div class="fg">
+          <label>Round Label</label
+          ><input
+            type="text"
+            id="roundLabel"
+            value="Qualifying"
+            oninput="send()"
+            style="width: 140px"
+          />
+        </div>
       </div>
     </div>
 
@@ -139,7 +224,23 @@
           >(2–5 · click robot to upload image)</span
         >
       </div>
+      <div class="st">
+        👾 Teams
+        <span
+          style="
+            font-family: Nunito;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-left: 4px;
+          "
+          >(2–5 · click robot to upload image)</span
+        >
+      </div>
       <div class="team-pool" id="teamPool"></div>
+      <button class="add-tb" onclick="addTeam()" id="addTeamBtn">
+        ➕ Add Team
+      </button>
       <button class="add-tb" onclick="addTeam()" id="addTeamBtn">
         ➕ Add Team
       </button>
@@ -160,11 +261,25 @@
           >— press when team finishes</span
         >
       </div>
+      <div class="st">
+        🏁 Mark Finish Order
+        <span
+          style="
+            font-family: Nunito;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-left: 4px;
+          "
+          >— press when team finishes</span
+        >
+      </div>
       <div class="fl" id="finishList"></div>
     </div>
 
     <!-- TIMER -->
     <div class="card">
+      <div class="st">⏱ Match Timer</div>
       <div class="st">⏱ Match Timer</div>
       <div class="tbig" id="timerDisplay">10:00</div>
       <div class="tbtns">
@@ -176,6 +291,7 @@
       <div class="srow">
         <label>Set Minutes:</label>
         <input type="number" id="minutesInput" value="10" min="1" />
+        <input type="number" id="minutesInput" value="10" min="1" />
         <button class="bapply" onclick="applyTimer()">Apply</button>
       </div>
       <div class="logw">
@@ -186,11 +302,23 @@
               <th>Rank</th>
               <th>Team</th>
               <th>Finish Time</th>
+              <th>Finish Time</th>
               <th>Clock</th>
             </tr>
           </thead>
           <tbody id="logBody">
             <tr>
+              <td
+                colspan="5"
+                style="
+                  text-align: center;
+                  color: var(--muted);
+                  padding: 12px;
+                  font-size: 12px;
+                "
+              >
+                🤖 No finishes yet
+              </td>
               <td
                 colspan="5"
                 style="
@@ -222,7 +350,24 @@
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"],
       });
+      let displayWindow = null;
+      let configWindow = null;
 
+      const socket = io({
+        reconnection: true,
+        reconnectionDelay: 100,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        transports: ["websocket", "polling"],
+      });
+
+      // Handle socket connection events
+      socket.on("connect", () => {
+        console.log("Connected to server");
+        updateConnectionUI(true);
+        // Resend display data when reconnecting
+        send();
+      });
       // Handle socket connection events
       socket.on("connect", () => {
         console.log("Connected to server");
@@ -235,7 +380,15 @@
         console.log("Disconnected from server");
         updateConnectionUI(false);
       });
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+        updateConnectionUI(false);
+      });
 
+      socket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        updateConnectionUI(false);
+      });
       socket.on("connect_error", (error) => {
         console.error("Socket connection error:", error);
         updateConnectionUI(false);
@@ -245,7 +398,32 @@
       const EMOJIS = ["1", "2", "3", "4", "5", "6"];
       const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
       const MAX_TEAMS = 6;
+      const COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6"];
+      const EMOJIS = ["1", "2", "3", "4", "5", "6"];
+      const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
+      const MAX_TEAMS = 6;
 
+      let teams = [
+        { id: 1, name: "Team 1", img: null },
+        { id: 2, name: "Team 2", img: null },
+      ];
+      let finishOrder = [];
+      let finishTimes = {};
+      let finishClocks = {};
+      let logRows = [];
+      let pushLogs = [];
+      let activePushes = {};
+      let lastPushTimes = {};
+      let timerRunning = false;
+      let timerStarted = false;
+      let totalSecs = 600;
+      let timerInterval = null;
+      let bg = "";
+      let titleSponsors = [];
+      let sponsors = [];
+      let partners = [];
+      const STORAGE_KEY = "robothink-control-state";
+      const DISPLAY_STATE_KEY = "robothink-display-state";
       let teams = [
         { id: 1, name: "Team 1", img: null },
         { id: 2, name: "Team 2", img: null },
@@ -293,6 +471,31 @@
               document.getElementById("minutesInput")?.value || "10",
             comPort: document.getElementById("comPortInput")?.value || "",
           };
+      function saveState() {
+        try {
+          const state = {
+            teams,
+            finishOrder,
+            finishTimes,
+            finishClocks,
+            logRows,
+            pushLogs,
+            activePushes,
+            lastPushTimes,
+            timerRunning,
+            timerStarted,
+            totalSecs,
+            bg,
+            titleSponsors,
+            sponsors,
+            partners,
+            eventName: document.getElementById("eventName")?.value || "",
+            roundNum: document.getElementById("roundNum")?.value || "1",
+            roundLabel: document.getElementById("roundLabel")?.value || "",
+            minutesInput:
+              document.getElementById("minutesInput")?.value || "10",
+            comPort: document.getElementById("comPortInput")?.value || "",
+          };
 
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (err) {
@@ -304,7 +507,37 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) return;
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
 
+          const state = JSON.parse(raw);
+          if (Array.isArray(state.teams) && state.teams.length)
+            teams = state.teams;
+          if (Array.isArray(state.finishOrder)) finishOrder = state.finishOrder;
+          if (state.finishTimes && typeof state.finishTimes === "object")
+            finishTimes = state.finishTimes;
+          if (state.finishClocks && typeof state.finishClocks === "object")
+            finishClocks = state.finishClocks;
+          if (Array.isArray(state.logRows)) logRows = state.logRows;
+          if (Array.isArray(state.pushLogs)) pushLogs = state.pushLogs;
+          if (state.activePushes && typeof state.activePushes === "object")
+            activePushes = state.activePushes;
+          if (state.lastPushTimes && typeof state.lastPushTimes === "object")
+            lastPushTimes = state.lastPushTimes;
+          if (Array.isArray(state.titleSponsors))
+            titleSponsors = state.titleSponsors;
+          if (Array.isArray(state.sponsors)) sponsors = state.sponsors;
+          if (Array.isArray(state.partners)) partners = state.partners;
+          if (typeof state.bg === "string") bg = state.bg;
+          if (typeof state.timerRunning === "boolean")
+            timerRunning = state.timerRunning;
+          if (typeof state.timerStarted === "boolean")
+            timerStarted = state.timerStarted;
+          if (Number.isFinite(Number(state.totalSecs)))
+            totalSecs = Number(state.totalSecs);
+          timerRunning = false;
           const state = JSON.parse(raw);
           if (Array.isArray(state.teams) && state.teams.length)
             teams = state.teams;
@@ -337,7 +570,26 @@
           const roundLabelInput = document.getElementById("roundLabel");
           const minutesInput = document.getElementById("minutesInput");
           const comPortInput = document.getElementById("comPortInput");
+          const eventNameInput = document.getElementById("eventName");
+          const roundNumInput = document.getElementById("roundNum");
+          const roundLabelInput = document.getElementById("roundLabel");
+          const minutesInput = document.getElementById("minutesInput");
+          const comPortInput = document.getElementById("comPortInput");
 
+          if (eventNameInput && typeof state.eventName === "string")
+            eventNameInput.value = state.eventName;
+          if (roundNumInput && typeof state.roundNum === "string")
+            roundNumInput.value = state.roundNum;
+          if (roundLabelInput && typeof state.roundLabel === "string")
+            roundLabelInput.value = state.roundLabel;
+          if (minutesInput && typeof state.minutesInput === "string")
+            minutesInput.value = state.minutesInput;
+          if (comPortInput && typeof state.comPort === "string")
+            comPortInput.value = state.comPort;
+        } catch (err) {
+          console.warn("Could not load control state", err);
+        }
+      }
           if (eventNameInput && typeof state.eventName === "string")
             eventNameInput.value = state.eventName;
           if (roundNumInput && typeof state.roundNum === "string")
@@ -361,7 +613,22 @@
         );
         setTimeout(send, 900);
       }
+      function openDisplay() {
+        displayWindow = window.open(
+          "display.html",
+          "display",
+          "width=1280,height=800",
+        );
+        setTimeout(send, 900);
+      }
 
+      function openConfig() {
+        configWindow = window.open(
+          "config.html",
+          "config",
+          "width=1280,height=800",
+        );
+      }
       function openConfig() {
         configWindow = window.open(
           "config.html",
@@ -380,7 +647,23 @@
           .forEach((panel) => panel.classList.remove("active"));
         document.getElementById(`tab-${name}`).classList.add("active");
       }
+      function switchTab(name) {
+        const names = ["bg", "title", "sponsor", "partner"];
+        document.querySelectorAll(".tab").forEach((tab, index) => {
+          tab.classList.toggle("active", names[index] === name);
+        });
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((panel) => panel.classList.remove("active"));
+        document.getElementById(`tab-${name}`).classList.add("active");
+      }
 
+      function getNextTeamId() {
+        for (let id = 1; id <= MAX_TEAMS; id++) {
+          if (!teams.some((team) => team.id === id)) return id;
+        }
+        return null;
+      }
       function getNextTeamId() {
         for (let id = 1; id <= MAX_TEAMS; id++) {
           if (!teams.some((team) => team.id === id)) return id;
@@ -393,7 +676,16 @@
         const roundLabel = document.getElementById("roundLabel").value || "";
         return `Round ${roundNum} · ${roundLabel}`;
       }
+      function getCurrentRoundLabel() {
+        const roundNum = document.getElementById("roundNum").value || "1";
+        const roundLabel = document.getElementById("roundLabel").value || "";
+        return `Round ${roundNum} · ${roundLabel}`;
+      }
 
+      function formatCsvValue(value) {
+        const text = value == null ? "" : String(value);
+        return `"${text.replace(/"/g, '""')}"`;
+      }
       function formatCsvValue(value) {
         const text = value == null ? "" : String(value);
         return `"${text.replace(/"/g, '""')}"`;
@@ -413,11 +705,32 @@
         link.remove();
         URL.revokeObjectURL(url);
       }
+      function downloadCsv(filename, rows) {
+        const csv = rows
+          .map((row) => row.map(formatCsvValue).join(","))
+          .join("\r\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
 
       function renderTeamPool() {
         const pool = document.getElementById("teamPool");
         pool.innerHTML = "";
+      function renderTeamPool() {
+        const pool = document.getElementById("teamPool");
+        pool.innerHTML = "";
 
+        teams.forEach((team, index) => {
+          const row = document.createElement("div");
+          row.className = "tr";
+          row.innerHTML = `
         teams.forEach((team, index) => {
           const row = document.createElement("div");
           row.className = "tr";
@@ -429,10 +742,18 @@
           <div class="tcd" style="background:${COLORS[index % COLORS.length]}"></div>
           <input class="ni" type="text" value="${team.name}" oninput="updateTName(${team.id},this.value)">
           ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ""}
+          ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ""}
         `;
           pool.appendChild(row);
         });
+          pool.appendChild(row);
+        });
 
+        document.getElementById("addTeamBtn").style.display =
+          teams.length >= MAX_TEAMS ? "none" : "flex";
+        renderFinishList();
+        send();
+      }
         document.getElementById("addTeamBtn").style.display =
           teams.length >= MAX_TEAMS ? "none" : "flex";
         renderFinishList();
@@ -442,7 +763,20 @@
       function handleImg(id, input) {
         const file = input.files[0];
         if (!file) return;
+      function handleImg(id, input) {
+        const file = input.files[0];
+        if (!file) return;
 
+        const reader = new FileReader();
+        reader.onload = () => {
+          const team = teams.find((item) => item.id === id);
+          if (team) {
+            team.img = reader.result;
+            renderTeamPool();
+          }
+        };
+        reader.readAsDataURL(file);
+      }
         const reader = new FileReader();
         reader.onload = () => {
           const team = teams.find((item) => item.id === id);
@@ -462,11 +796,25 @@
           send();
         }
       }
+      function updateTName(id, name) {
+        const team = teams.find((item) => item.id === id);
+        if (team) {
+          team.name = name;
+          renderFinishList();
+          send();
+        }
+      }
 
       function addTeam() {
         const id = getNextTeamId();
         if (id == null) return;
+      function addTeam() {
+        const id = getNextTeamId();
+        if (id == null) return;
 
+        teams.push({ id, name: `Team ${id}`, img: null });
+        renderTeamPool();
+      }
         teams.push({ id, name: `Team ${id}`, img: null });
         renderTeamPool();
       }
@@ -482,7 +830,21 @@
       }
       function clearFinishData() {
         if (!confirm("Clear all finish times?")) return;
+      function removeTeam(id) {
+        teams = teams.filter((team) => team.id !== id);
+        finishOrder = finishOrder.filter((teamId) => teamId !== id);
+        delete finishTimes[id];
+        delete finishClocks[id];
+        delete activePushes[id];
+        delete lastPushTimes[id];
+        renderTeamPool();
+      }
+      function clearFinishData() {
+        if (!confirm("Clear all finish times?")) return;
 
+        finishOrder = [];
+        finishTimes = {};
+        finishClocks = {};
         finishOrder = [];
         finishTimes = {};
         finishClocks = {};
@@ -503,11 +865,23 @@
           row.className = `ftr${finished ? " finished" : ""}`;
           row.innerHTML = `
           <div class="frank">${finished ? MEDALS[rank] : "·"}</div>
+        teams.forEach((team, index) => {
+          const rank = finishOrder.indexOf(team.id);
+          const finished = rank !== -1;
+          const row = document.createElement("div");
+          row.className = `ftr${finished ? " finished" : ""}`;
+          row.innerHTML = `
+          <div class="frank">${finished ? MEDALS[rank] : "·"}</div>
           <div class="fimg">${team.img ? `<img src="${team.img}">` : `<span>${EMOJIS[index % EMOJIS.length]}</span>`}</div>
           <div class="fname" style="color:${COLORS[index % COLORS.length]}">${team.name}</div>
           <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ""}</div>
           ${finished ? `<button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>` : `<button class="bfin" onclick="markFinish(${team.id})" ${!timerStarted || !timerRunning || totalSecs <= 0 ? "disabled" : ""}>🏁 Finish!</button>`}
+          <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ""}</div>
+          ${finished ? `<button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>` : `<button class="bfin" onclick="markFinish(${team.id})" ${!timerStarted || !timerRunning || totalSecs <= 0 ? "disabled" : ""}>🏁 Finish!</button>`}
         `;
+          list.appendChild(row);
+        });
+      }
           list.appendChild(row);
         });
       }
@@ -520,11 +894,32 @@
           finishOrder.includes(id)
         )
           return;
+      function markFinish(id) {
+        if (
+          !timerStarted ||
+          !timerRunning ||
+          totalSecs <= 0 ||
+          finishOrder.includes(id)
+        )
+          return;
 
         finishOrder.push(id);
         finishTimes[id] = document.getElementById("timerDisplay").textContent;
         finishClocks[id] = new Date().toLocaleTimeString();
+        finishOrder.push(id);
+        finishTimes[id] = document.getElementById("timerDisplay").textContent;
+        finishClocks[id] = new Date().toLocaleTimeString();
 
+        const team = teams.find((item) => item.id === id);
+        const rank = finishOrder.length;
+        logRows.push({
+          recordType: "finish",
+          round: getCurrentRoundLabel(),
+          rank,
+          team: team ? team.name : "?",
+          finishTime: finishTimes[id],
+          clock: finishClocks[id],
+        });
         const team = teams.find((item) => item.id === id);
         const rank = finishOrder.length;
         logRows.push({
@@ -540,7 +935,15 @@
         renderLog();
         send();
       }
+        renderFinishList();
+        renderLog();
+        send();
+      }
 
+      function unfinish(id) {
+        const team = teams.find((item) => item.id === id);
+        const roundLabel = getCurrentRoundLabel();
+        const teamName = team ? team.name : "?";
       function unfinish(id) {
         const team = teams.find((item) => item.id === id);
         const roundLabel = getCurrentRoundLabel();
@@ -557,12 +960,30 @@
         finishOrder = finishOrder.filter((teamId) => teamId !== id);
         delete finishTimes[id];
         delete finishClocks[id];
+        logRows = logRows.filter(
+          (row) =>
+            !(
+              row.recordType === "finish" &&
+              row.team === teamName &&
+              row.round === roundLabel
+            ),
+        );
+        finishOrder = finishOrder.filter((teamId) => teamId !== id);
+        delete finishTimes[id];
+        delete finishClocks[id];
 
         renderFinishList();
         renderLog();
         send();
       }
+        renderFinishList();
+        renderLog();
+        send();
+      }
 
+      function renderLog() {
+        const body = document.getElementById("logBody");
+        const finishRows = logRows.filter((row) => row.recordType === "finish");
       function renderLog() {
         const body = document.getElementById("logBody");
         const finishRows = logRows.filter((row) => row.recordType === "finish");
@@ -572,7 +993,18 @@
             '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';
           return;
         }
+        if (!finishRows.length) {
+          body.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';
+          return;
+        }
 
+        const rankClass = (rank) =>
+          rank === 1 ? "rk1" : rank === 2 ? "rk2" : rank === 3 ? "rk3" : "rko";
+        body.innerHTML = [...finishRows]
+          .reverse()
+          .map(
+            (row) => `
         const rankClass = (rank) =>
           rank === 1 ? "rk1" : rank === 2 ? "rk2" : rank === 3 ? "rk3" : "rko";
         body.innerHTML = [...finishRows]
@@ -590,7 +1022,22 @@
           )
           .join("");
       }
+      `,
+          )
+          .join("");
+      }
 
+      function updateTimerUI() {
+        const minutes = Math.floor(totalSecs / 60);
+        const seconds = totalSecs % 60;
+        document.getElementById("timerDisplay").textContent =
+          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        document
+          .getElementById("timerDisplay")
+          .classList.toggle("urgent", totalSecs <= 30);
+        renderFinishList();
+        send();
+      }
       function updateTimerUI() {
         const minutes = Math.floor(totalSecs / 60);
         const seconds = totalSecs % 60;
@@ -610,11 +1057,30 @@
             (parseInt(document.getElementById("minutesInput").value, 10) ||
               10) * 60;
         }
+      function startTimer() {
+        if (timerInterval) return;
+        if (totalSecs <= 0) {
+          totalSecs =
+            (parseInt(document.getElementById("minutesInput").value, 10) ||
+              10) * 60;
+        }
 
         timerStarted = true;
         timerRunning = true;
         renderFinishList();
+        timerStarted = true;
+        timerRunning = true;
+        renderFinishList();
 
+        timerInterval = setInterval(() => {
+          if (totalSecs <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerRunning = false;
+            renderFinishList();
+            send();
+            return;
+          }
         timerInterval = setInterval(() => {
           if (totalSecs <= 0) {
             clearInterval(timerInterval);
@@ -629,6 +1095,10 @@
           updateTimerUI();
         }, 1000);
       }
+          totalSecs--;
+          updateTimerUI();
+        }, 1000);
+      }
 
       function pauseTimer() {
         if (!timerInterval) return;
@@ -638,7 +1108,21 @@
         renderFinishList();
         send();
       }
+      function pauseTimer() {
+        if (!timerInterval) return;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerRunning = false;
+        renderFinishList();
+        send();
+      }
 
+      function applyTimer() {
+        totalSecs =
+          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
+          60;
+        updateTimerUI();
+      }
       function applyTimer() {
         totalSecs =
           (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
@@ -662,7 +1146,26 @@
         renderLog();
         send();
       }
+      function resetRound() {
+        pauseTimer();
+        timerStarted = false;
+        totalSecs =
+          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
+          60;
+        finishOrder = [];
+        finishTimes = {};
+        finishClocks = {};
+        activePushes = {};
+        lastPushTimes = {};
+        updateTimerUI();
+        renderFinishList();
+        renderLog();
+        send();
+      }
 
+      function isCountdownActive() {
+        return timerStarted && timerRunning && totalSecs > 0;
+      }
       function isCountdownActive() {
         return timerStarted && timerRunning && totalSecs > 0;
       }
@@ -671,10 +1174,24 @@
         const teamId = Number(data.id);
         const team = teams.find((item) => item.id === teamId);
         if (!team) return;
+      function updatePushState(data) {
+        const teamId = Number(data.id);
+        const team = teams.find((item) => item.id === teamId);
+        if (!team) return;
 
         if (data.pressed) {
           if (!isCountdownActive() || activePushes[teamId]) return;
+        if (data.pressed) {
+          if (!isCountdownActive() || activePushes[teamId]) return;
 
+          activePushes[teamId] = {
+            teamId,
+            teamName: team.name,
+            round: getCurrentRoundLabel(),
+            pressedAt: data.clockTime || new Date().toLocaleTimeString(),
+            pressedIso: data.isoTime || new Date().toISOString(),
+            timerAtPress: document.getElementById("timerDisplay").textContent,
+          };
           activePushes[teamId] = {
             teamId,
             teamName: team.name,
@@ -688,10 +1205,25 @@
           send();
           return;
         }
+          lastPushTimes[teamId] = activePushes[teamId].pressedAt;
+          send();
+          return;
+        }
 
         const active = activePushes[teamId];
         if (!active) return;
+        const active = activePushes[teamId];
+        if (!active) return;
 
+        const releasedAt = data.clockTime || new Date().toLocaleTimeString();
+        const releasedIso = data.isoTime || new Date().toISOString();
+        const durationSec = Number(
+          (
+            (new Date(releasedIso).getTime() -
+              new Date(active.pressedIso).getTime()) /
+            1000
+          ).toFixed(1),
+        );
         const releasedAt = data.clockTime || new Date().toLocaleTimeString();
         const releasedIso = data.isoTime || new Date().toISOString();
         const durationSec = Number(
@@ -713,14 +1245,47 @@
           durationSec:
             Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : "",
         });
+        pushLogs.push({
+          teamId,
+          teamName: team.name,
+          round: active.round,
+          pressedAt: active.pressedAt,
+          releasedAt,
+          timerAtPress: active.timerAtPress,
+          timerAtRelease: document.getElementById("timerDisplay").textContent,
+          durationSec:
+            Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : "",
+        });
 
+        lastPushTimes[teamId] = active.pressedAt;
+        delete activePushes[teamId];
+        send();
+      }
         lastPushTimes[teamId] = active.pressedAt;
         delete activePushes[teamId];
         send();
       }
 
       socket.on("button-update", updatePushState);
+      socket.on("button-update", updatePushState);
 
+      function exportCsv() {
+        const rows = [
+          [
+            "Record Type",
+            "Round",
+            "Rank",
+            "Team",
+            "Finish Time",
+            "Clock Time",
+            "Button ID",
+            "Pressed At",
+            "Released At",
+            "Timer At Press",
+            "Timer At Release",
+            "Hold Duration (sec)",
+          ],
+        ];
       function exportCsv() {
         const rows = [
           [
@@ -757,7 +1322,41 @@
               "",
             ]);
           });
+        logRows
+          .filter((row) => row.recordType === "finish")
+          .forEach((row) => {
+            rows.push([
+              "finish",
+              row.round,
+              `#${row.rank}`,
+              row.team,
+              row.finishTime,
+              row.clock,
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+            ]);
+          });
 
+        Object.values(activePushes).forEach((push) => {
+          rows.push([
+            "button_press_active",
+            push.round,
+            "",
+            push.teamName,
+            "",
+            "",
+            push.teamId,
+            push.pressedAt,
+            "",
+            push.timerAtPress,
+            "",
+            "",
+          ]);
+        });
         Object.values(activePushes).forEach((push) => {
           rows.push([
             "button_press_active",
@@ -791,7 +1390,28 @@
             push.durationSec,
           ]);
         });
+        pushLogs.forEach((push) => {
+          rows.push([
+            "button_press",
+            push.round,
+            "",
+            push.teamName,
+            "",
+            "",
+            push.teamId,
+            push.pressedAt,
+            push.releasedAt,
+            push.timerAtPress,
+            push.timerAtRelease,
+            push.durationSec,
+          ]);
+        });
 
+        downloadCsv(
+          `RoboRace_${new Date().toISOString().slice(0, 10)}.csv`,
+          rows,
+        );
+      }
         downloadCsv(
           `RoboRace_${new Date().toISOString().slice(0, 10)}.csv`,
           rows,
@@ -802,7 +1422,25 @@
         document.getElementById(inputId).onchange = (event) => {
           const file = event.target.files[0];
           if (!file) return;
+      function makeFileHandler(inputId, listRef, listId) {
+        document.getElementById(inputId).onchange = (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
 
+          const reader = new FileReader();
+          reader.onload = () => {
+            listRef.push({
+              id: Date.now() + Math.random(),
+              src: reader.result,
+              name: file.name,
+            });
+            renderSponsorList(listRef, listId);
+            send();
+          };
+          reader.readAsDataURL(file);
+          event.target.value = "";
+        };
+      }
           const reader = new FileReader();
           reader.onload = () => {
             listRef.push({
@@ -828,6 +1466,16 @@
         document.getElementById(listId).innerHTML = arr
           .map(
             (item) => `
+      function renderSponsorList(arr, listId) {
+        const removeFn =
+          listId === "titleList"
+            ? "removeTitleSponsor"
+            : listId === "sponsorList"
+              ? "removeSponsor"
+              : "removePartner";
+        document.getElementById(listId).innerHTML = arr
+          .map(
+            (item) => `
         <div class="sitem">
           <img src="${item.src}"><span>${item.name}</span>
           <button class="rspon" onclick="${removeFn}(${item.id})">✕</button>
@@ -836,7 +1484,16 @@
           )
           .join("");
       }
+      `,
+          )
+          .join("");
+      }
 
+      window.removeTitleSponsor = (id) => {
+        titleSponsors = titleSponsors.filter((item) => item.id !== id);
+        renderSponsorList(titleSponsors, "titleList");
+        send();
+      };
       window.removeTitleSponsor = (id) => {
         titleSponsors = titleSponsors.filter((item) => item.id !== id);
         renderSponsorList(titleSponsors, "titleList");
@@ -848,7 +1505,17 @@
         renderSponsorList(sponsors, "sponsorList");
         send();
       };
+      window.removeSponsor = (id) => {
+        sponsors = sponsors.filter((item) => item.id !== id);
+        renderSponsorList(sponsors, "sponsorList");
+        send();
+      };
 
+      window.removePartner = (id) => {
+        partners = partners.filter((item) => item.id !== id);
+        renderSponsorList(partners, "partnerList");
+        send();
+      };
       window.removePartner = (id) => {
         partners = partners.filter((item) => item.id !== id);
         renderSponsorList(partners, "partnerList");
@@ -863,11 +1530,52 @@
         };
         reader.readAsDataURL(event.target.files[0]);
       };
+      document.getElementById("backgroundInput").onchange = (event) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          bg = reader.result;
+          send();
+        };
+        reader.readAsDataURL(event.target.files[0]);
+      };
 
       makeFileHandler("titleInput", titleSponsors, "titleList");
       makeFileHandler("sponsorInput", sponsors, "sponsorList");
       makeFileHandler("partnerInput", partners, "partnerList");
+      makeFileHandler("titleInput", titleSponsors, "titleList");
+      makeFileHandler("sponsorInput", sponsors, "sponsorList");
+      makeFileHandler("partnerInput", partners, "partnerList");
 
+      function send() {
+        const payload = {
+          teams: teams.map((team, index) => ({
+            id: team.id,
+            name: team.name,
+            img: team.img,
+            color: COLORS[index % COLORS.length],
+            emoji: EMOJIS[index % EMOJIS.length],
+            rank: finishOrder.includes(team.id)
+              ? finishOrder.indexOf(team.id) + 1
+              : null,
+            finishTime: finishTimes[team.id] || null,
+          })),
+          finishOrder,
+          timer: document.getElementById("timerDisplay").textContent,
+          timerUrgent: totalSecs <= 30,
+          timerRunning,
+          timerStarted,
+          eventName: document.getElementById("eventName").value,
+          roundNum: document.getElementById("roundNum").value,
+          roundLabel: document.getElementById("roundLabel").value,
+          background: bg,
+          pushState: {
+            activePushes,
+            lastPushTimes,
+          },
+          titleSponsors,
+          sponsors,
+          partners,
+        };
       function send() {
         const payload = {
           teams: teams.map((team, index) => ({
@@ -904,7 +1612,21 @@
         } catch (err) {
           console.warn("Could not save display state", err);
         }
+        try {
+          localStorage.setItem(DISPLAY_STATE_KEY, JSON.stringify(payload));
+        } catch (err) {
+          console.warn("Could not save display state", err);
+        }
 
+        // Send via socket.io
+        if (socket && socket.connected) {
+          socket.emit("display-update", payload);
+          console.log("Display update sent via socket.io");
+        } else {
+          console.warn(
+            "Socket not connected, updates will be sent when reconnected",
+          );
+        }
         // Send via socket.io
         if (socket && socket.connected) {
           socket.emit("display-update", payload);
@@ -917,7 +1639,15 @@
 
         saveState();
       }
+        saveState();
+      }
 
+      // Update connection UI when server reports Arduino status or serial info
+      function updateConnectionUI(open, path) {
+        const pill = document.getElementById("connection-pill");
+        const text = document.getElementById("connection-text");
+        const input = document.getElementById("comPortInput");
+        if (!pill || !text || !input) return;
       // Update connection UI when server reports Arduino status or serial info
       function updateConnectionUI(open, path) {
         const pill = document.getElementById("connection-pill");
@@ -932,14 +1662,30 @@
           pill.classList.remove("connected");
           text.textContent = "Disconnected";
         }
+        if (open) {
+          pill.classList.add("connected");
+          text.textContent = "Connected";
+        } else {
+          pill.classList.remove("connected");
+          text.textContent = "Disconnected";
+        }
 
+        if (typeof path === "string" && path) input.value = path;
+      }
         if (typeof path === "string" && path) input.value = path;
       }
 
       socket.on("arduino-status", (isConnected) => {
         updateConnectionUI(Boolean(isConnected));
       });
+      socket.on("arduino-status", (isConnected) => {
+        updateConnectionUI(Boolean(isConnected));
+      });
 
+      socket.on("serial-info", (info) => {
+        if (!info) return;
+        updateConnectionUI(Boolean(info.open), info.path);
+      });
       socket.on("serial-info", (info) => {
         if (!info) return;
         updateConnectionUI(Boolean(info.open), info.path);
@@ -955,9 +1701,23 @@
         if (text) text.textContent = "Applying...";
         saveState();
       }
+      function applyComPort() {
+        const input = document.getElementById("comPortInput");
+        if (!input) return;
+        const newPath = input.value && input.value.trim();
+        if (!newPath) return;
+        socket.emit("set-serial", { path: newPath });
+        const text = document.getElementById("connection-text");
+        if (text) text.textContent = "Applying...";
+        saveState();
+      }
 
       loadState();
+      loadState();
 
+      renderSponsorList(titleSponsors, "titleList");
+      renderSponsorList(sponsors, "sponsorList");
+      renderSponsorList(partners, "partnerList");
       renderSponsorList(titleSponsors, "titleList");
       renderSponsorList(sponsors, "sponsorList");
       renderSponsorList(partners, "partnerList");
@@ -965,6 +1725,10 @@
       renderTeamPool();
       renderLog();
       updateTimerUI();
+      renderTeamPool();
+      renderLog();
+      updateTimerUI();
     </script>
   </body>
 </html>
+
