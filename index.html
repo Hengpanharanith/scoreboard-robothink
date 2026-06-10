@@ -1,15 +1,10 @@
-﻿<!doctype html>
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta charset="UTF-8" />
     <title>RoboRace Control</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/style/index.css" />
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/style/index.css" />
@@ -47,40 +42,109 @@
         font-weight: 600;
         width: 90px;
       }
-    </style>
-      .connection-pill {
-        display: inline-flex;
+
+      /* ===== TIMER SECTION STYLES ===== */
+      .timer-blocks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .timer-block {
+        background: #F8FAFF;
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        transition: border-color 0.3s;
+      }
+      .timer-block.prep { border-color: rgba(245,158,11,0.25); }
+      .timer-block.play { border-color: rgba(59,130,246,0.25); }
+      .timer-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .timer-block-label {
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .timer-block.prep .timer-block-label { color: #D97706; }
+      .timer-block.play .timer-block-label { color: #3B82F6; }
+      .timer-phase-badge {
+        font-size: 10px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 12px;
+        letter-spacing: 0.05em;
+      }
+      .timer-phase-badge.active {
+        background: #D1FAE5;
+        color: #065F46;
+      }
+      .timer-phase-badge.paused {
+        background: #FEF3C7;
+        color: #92400E;
+      }
+      .timer-phase-badge.idle {
+        background: #F3F4F6;
+        color: #4B5563;
+      }
+      .timer-display {
+        font-family: 'Fredoka One', cursive;
+        font-size: 38px;
+        text-align: center;
+        margin-bottom: 12px;
+        letter-spacing: 0.02em;
+        line-height: 1;
+      }
+      .timer-block.prep .timer-display { color: #F59E0B; }
+      .timer-block.play .timer-display { color: #3B82F6; }
+      .timer-display.warning { color: #EF4444 !important; animation: timerWarn 0.5s ease-in-out infinite; }
+      .timer-display.done { color: #EF4444 !important; opacity: 0.6; }
+      @keyframes timerWarn {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(0.96); }
+      }
+      .timer-input-row {
+        display: flex;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px;
-        border-radius: 18px;
-        background: #f3f4f6;
-        color: #111;
-        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .timer-input-label {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .timer-input {
+        flex: 1;
+        width: 100%;
+        text-align: center;
         font-size: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.06);
+        font-weight: 700;
       }
-      .connection-pill .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #ef4444;
-        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+      .timer-controls {
+        display: flex;
+        gap: 6px;
       }
-      .connection-pill.connected .status-dot {
-        background: #22c55e;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
+      .timer-btn {
+        flex: 1;
+        font-family: 'Fredoka One', cursive;
+        font-size: 11px;
+        padding: 7px 0;
+        border-radius: 9px;
+        border: 2px solid;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: #fff;
       }
-      #comPortInput {
-        margin-left: 10px;
-        padding: 6px 8px;
-        border-radius: 6px;
-        border: 1px solid #e5e7eb;
-        background: #f9fafb;
-        color: #111;
-        font-weight: 600;
-        width: 90px;
-      }
+      .timer-btn.start { color: #059669; border-color: rgba(5,150,105,0.4); }
+      .timer-btn.start:hover { background: rgba(5,150,105,0.08); border-color: #059669; }
+      .timer-btn.pause { color: #D97706; border-color: rgba(217,119,6,0.4); }
+      .timer-btn.pause:hover { background: rgba(217,119,6,0.08); border-color: #D97706; }
+      .timer-btn.reset { color: #EF4444; border-color: rgba(239,68,68,0.4); }
+      .timer-btn.reset:hover { background: rgba(239,68,68,0.08); border-color: #EF4444; }
     </style>
   </head>
   <script src="/socket.io/socket.io.js"></script>
@@ -92,19 +156,11 @@
       <div>
         <h1>RoboRace Control</h1>
         <div class="sub">Finish Order Tracker · Operator Panel</div>
-        <div class="sub">Finish Order Tracker · Operator Panel</div>
       </div>
       <div class="live-badge">
         <div class="ld"></div>
         LIVE
-        <div class="ld"></div>
-        LIVE
       </div>
-      <div
-        id="connection-pill"
-        class="connection-pill"
-        style="margin-left: 10px"
-      >
       <div
         id="connection-pill"
         class="connection-pill"
@@ -113,14 +169,12 @@
         <div class="status-dot"></div>
         <span id="connection-text">Disconnected</span>
       </div>
-      <input id="comPortInput" type="text" value title="COM port (editable)" />
-      <button
-        id="applyComBtn"
-        class="open-btn"
-        style="margin-left: 6px; padding: 6px 8px"
-        onclick="applyComPort()"
-      >
-        Apply
+      <input
+        id="comPortInput"
+        type="text"
+        value=""
+        title="COM port (editable)"
+      />
       <button
         id="applyComBtn"
         class="open-btn"
@@ -138,43 +192,18 @@
       >
         ⚙ Open Config
       </button>
+      <button
+        class="open-btn"
+        onclick="window.location.href = '/tech-bot.html'"
+      >
+        🤖 Tech-Bot
+      </button>
     </div>
 
     <!-- ROUND INFO -->
     <div class="card">
       <div class="st">🏆 Round Info</div>
       <div class="rrow">
-        <div class="fg">
-          <label>Event Name</label
-          ><input
-            type="text"
-            id="eventName"
-            value="Robot Think 2026"
-            oninput="send()"
-            style="width: 190px"
-          />
-        </div>
-        <div class="fg">
-          <label>Round #</label
-          ><input
-            type="number"
-            id="roundNum"
-            value="1"
-            min="1"
-            style="width: 70px"
-            oninput="send()"
-          />
-        </div>
-        <div class="fg">
-          <label>Round Label</label
-          ><input
-            type="text"
-            id="roundLabel"
-            value="Qualifying"
-            oninput="send()"
-            style="width: 140px"
-          />
-        </div>
         <div class="fg">
           <label>Event Name</label
           ><input
@@ -224,23 +253,7 @@
           >(2–5 · click robot to upload image)</span
         >
       </div>
-      <div class="st">
-        👾 Teams
-        <span
-          style="
-            font-family: Nunito;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            margin-left: 4px;
-          "
-          >(2–5 · click robot to upload image)</span
-        >
-      </div>
       <div class="team-pool" id="teamPool"></div>
-      <button class="add-tb" onclick="addTeam()" id="addTeamBtn">
-        ➕ Add Team
-      </button>
       <button class="add-tb" onclick="addTeam()" id="addTeamBtn">
         ➕ Add Team
       </button>
@@ -261,38 +274,54 @@
           >— press when team finishes</span
         >
       </div>
-      <div class="st">
-        🏁 Mark Finish Order
-        <span
-          style="
-            font-family: Nunito;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            margin-left: 4px;
-          "
-          >— press when team finishes</span
-        >
-      </div>
       <div class="fl" id="finishList"></div>
     </div>
 
     <!-- TIMER -->
     <div class="card">
       <div class="st">⏱ Match Timer</div>
-      <div class="st">⏱ Match Timer</div>
-      <div class="tbig" id="timerDisplay">10:00</div>
-      <div class="tbtns">
-        <button class="btt bstart" onclick="startTimer()">▶ Start</button>
-        <button class="btt bpause" onclick="pauseTimer()">⏸ Pause</button>
-        <button class="btt breset" onclick="resetRound()">↺ Reset Round</button>
-        <button class="btt bexp" onclick="exportCsv()">⬇ Export CSV</button>
+      <div class="timer-blocks" style="margin-bottom: 16px;">
+        <!-- PREPARATION TIMER -->
+        <div class="timer-block prep">
+          <div class="timer-block-header">
+            <span class="timer-block-label">🟡 Preparation</span>
+            <span class="timer-phase-badge idle" id="prepBadge">IDLE</span>
+          </div>
+          <div class="timer-display" id="prepDisplay">00:30</div>
+          <div class="timer-input-row">
+            <span class="timer-input-label">SET</span>
+            <input class="timer-input" id="prepInput" type="text" value="00:30" placeholder="MM:SS"
+              onblur="applyTimerInput('prep')" onkeydown="if(event.key==='Enter') applyTimerInput('prep')"/>
+          </div>
+          <div class="timer-controls">
+            <button class="timer-btn start" onclick="timerControl('prep','start')">▶ START</button>
+            <button class="timer-btn pause" onclick="timerControl('prep','pause')">⏸ PAUSE</button>
+            <button class="timer-btn reset" onclick="timerControl('prep','reset')">↺ RESET</button>
+          </div>
+        </div>
+
+        <!-- PLAY TIMER -->
+        <div class="timer-block play">
+          <div class="timer-block-header">
+            <span class="timer-block-label">🔵 Play Time</span>
+            <span class="timer-phase-badge idle" id="playBadge">IDLE</span>
+          </div>
+          <div class="timer-display" id="playDisplay">02:00</div>
+          <div class="timer-input-row">
+            <span class="timer-input-label">SET</span>
+            <input class="timer-input" id="playInput" type="text" value="02:00" placeholder="MM:SS"
+              onblur="applyTimerInput('play')" onkeydown="if(event.key==='Enter') applyTimerInput('play')"/>
+          </div>
+          <div class="timer-controls">
+            <button class="timer-btn start" onclick="timerControl('play','start')">▶ START</button>
+            <button class="timer-btn pause" onclick="timerControl('play','pause')">⏸ PAUSE</button>
+            <button class="timer-btn reset" onclick="timerControl('play','reset')">↺ RESET</button>
+          </div>
+        </div>
       </div>
-      <div class="srow">
-        <label>Set Minutes:</label>
-        <input type="number" id="minutesInput" value="10" min="1" />
-        <input type="number" id="minutesInput" value="10" min="1" />
-        <button class="bapply" onclick="applyTimer()">Apply</button>
+      <div class="tbtns" style="margin-bottom: 12px;">
+        <button class="btt breset" onclick="resetRound()">↺ Reset Round</button>
+        <button class="btt bexp" onclick="exportCsv()" style="margin-left: auto;">⬇ Export CSV</button>
       </div>
       <div class="logw">
         <table>
@@ -301,7 +330,6 @@
               <th>Round</th>
               <th>Rank</th>
               <th>Team</th>
-              <th>Finish Time</th>
               <th>Finish Time</th>
               <th>Clock</th>
             </tr>
@@ -319,25 +347,11 @@
               >
                 🤖 No finishes yet
               </td>
-              <td
-                colspan="5"
-                style="
-                  text-align: center;
-                  color: var(--muted);
-                  padding: 12px;
-                  font-size: 12px;
-                "
-              >
-                🤖 No finishes yet
-              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- MEDIA — Background + Sponsors/Partners with tabs -->
-    <!--  -->
 
     <script>
       let displayWindow = null;
@@ -350,36 +364,14 @@
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"],
       });
-      let displayWindow = null;
-      let configWindow = null;
-
-      const socket = io({
-        reconnection: true,
-        reconnectionDelay: 100,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: 5,
-        transports: ["websocket", "polling"],
-      });
 
       // Handle socket connection events
       socket.on("connect", () => {
         console.log("Connected to server");
         updateConnectionUI(true);
-        // Resend display data when reconnecting
-        send();
-      });
-      // Handle socket connection events
-      socket.on("connect", () => {
-        console.log("Connected to server");
-        updateConnectionUI(true);
-        // Resend display data when reconnecting
         send();
       });
 
-      socket.on("disconnect", () => {
-        console.log("Disconnected from server");
-        updateConnectionUI(false);
-      });
       socket.on("disconnect", () => {
         console.log("Disconnected from server");
         updateConnectionUI(false);
@@ -389,15 +381,7 @@
         console.error("Socket connection error:", error);
         updateConnectionUI(false);
       });
-      socket.on("connect_error", (error) => {
-        console.error("Socket connection error:", error);
-        updateConnectionUI(false);
-      });
 
-      const COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6"];
-      const EMOJIS = ["1", "2", "3", "4", "5", "6"];
-      const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
-      const MAX_TEAMS = 6;
       const COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6"];
       const EMOJIS = ["1", "2", "3", "4", "5", "6"];
       const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
@@ -418,31 +402,7 @@
       let timerStarted = false;
       let totalSecs = 600;
       let timerInterval = null;
-      let bg = "";
-      let titleSponsors = [];
-      let sponsors = [];
-      let partners = [];
-      const STORAGE_KEY = "robothink-control-state";
-      const DISPLAY_STATE_KEY = "robothink-display-state";
-      let teams = [
-        { id: 1, name: "Team 1", img: null },
-        { id: 2, name: "Team 2", img: null },
-      ];
-      let finishOrder = [];
-      let finishTimes = {};
-      let finishClocks = {};
-      let logRows = [];
-      let pushLogs = [];
-      let activePushes = {};
-      let lastPushTimes = {};
-      let timerRunning = false;
-      let timerStarted = false;
-      let totalSecs = 600;
-      let timerInterval = null;
-      let bg = "";
-      let titleSponsors = [];
-      let sponsors = [];
-      let partners = [];
+
       const STORAGE_KEY = "robothink-control-state";
       const DISPLAY_STATE_KEY = "robothink-display-state";
 
@@ -460,10 +420,6 @@
             timerRunning,
             timerStarted,
             totalSecs,
-            bg,
-            titleSponsors,
-            sponsors,
-            partners,
             eventName: document.getElementById("eventName")?.value || "",
             roundNum: document.getElementById("roundNum")?.value || "1",
             roundLabel: document.getElementById("roundLabel")?.value || "",
@@ -471,32 +427,6 @@
               document.getElementById("minutesInput")?.value || "10",
             comPort: document.getElementById("comPortInput")?.value || "",
           };
-      function saveState() {
-        try {
-          const state = {
-            teams,
-            finishOrder,
-            finishTimes,
-            finishClocks,
-            logRows,
-            pushLogs,
-            activePushes,
-            lastPushTimes,
-            timerRunning,
-            timerStarted,
-            totalSecs,
-            bg,
-            titleSponsors,
-            sponsors,
-            partners,
-            eventName: document.getElementById("eventName")?.value || "",
-            roundNum: document.getElementById("roundNum")?.value || "1",
-            roundLabel: document.getElementById("roundLabel")?.value || "",
-            minutesInput:
-              document.getElementById("minutesInput")?.value || "10",
-            comPort: document.getElementById("comPortInput")?.value || "",
-          };
-
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (err) {
           console.warn("Could not save control state", err);
@@ -507,10 +437,6 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) return;
-      function loadState() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return;
 
           const state = JSON.parse(raw);
           if (Array.isArray(state.teams) && state.teams.length)
@@ -526,50 +452,15 @@
             activePushes = state.activePushes;
           if (state.lastPushTimes && typeof state.lastPushTimes === "object")
             lastPushTimes = state.lastPushTimes;
-          if (Array.isArray(state.titleSponsors))
-            titleSponsors = state.titleSponsors;
-          if (Array.isArray(state.sponsors)) sponsors = state.sponsors;
-          if (Array.isArray(state.partners)) partners = state.partners;
-          if (typeof state.bg === "string") bg = state.bg;
           if (typeof state.timerRunning === "boolean")
             timerRunning = state.timerRunning;
           if (typeof state.timerStarted === "boolean")
             timerStarted = state.timerStarted;
           if (Number.isFinite(Number(state.totalSecs)))
             totalSecs = Number(state.totalSecs);
-          timerRunning = false;
-          const state = JSON.parse(raw);
-          if (Array.isArray(state.teams) && state.teams.length)
-            teams = state.teams;
-          if (Array.isArray(state.finishOrder)) finishOrder = state.finishOrder;
-          if (state.finishTimes && typeof state.finishTimes === "object")
-            finishTimes = state.finishTimes;
-          if (state.finishClocks && typeof state.finishClocks === "object")
-            finishClocks = state.finishClocks;
-          if (Array.isArray(state.logRows)) logRows = state.logRows;
-          if (Array.isArray(state.pushLogs)) pushLogs = state.pushLogs;
-          if (state.activePushes && typeof state.activePushes === "object")
-            activePushes = state.activePushes;
-          if (state.lastPushTimes && typeof state.lastPushTimes === "object")
-            lastPushTimes = state.lastPushTimes;
-          if (Array.isArray(state.titleSponsors))
-            titleSponsors = state.titleSponsors;
-          if (Array.isArray(state.sponsors)) sponsors = state.sponsors;
-          if (Array.isArray(state.partners)) partners = state.partners;
-          if (typeof state.bg === "string") bg = state.bg;
-          if (typeof state.timerRunning === "boolean")
-            timerRunning = state.timerRunning;
-          if (typeof state.timerStarted === "boolean")
-            timerStarted = state.timerStarted;
-          if (Number.isFinite(Number(state.totalSecs)))
-            totalSecs = Number(state.totalSecs);
+          // Always start paused after reload
           timerRunning = false;
 
-          const eventNameInput = document.getElementById("eventName");
-          const roundNumInput = document.getElementById("roundNum");
-          const roundLabelInput = document.getElementById("roundLabel");
-          const minutesInput = document.getElementById("minutesInput");
-          const comPortInput = document.getElementById("comPortInput");
           const eventNameInput = document.getElementById("eventName");
           const roundNumInput = document.getElementById("roundNum");
           const roundLabelInput = document.getElementById("roundLabel");
@@ -590,34 +481,12 @@
           console.warn("Could not load control state", err);
         }
       }
-          if (eventNameInput && typeof state.eventName === "string")
-            eventNameInput.value = state.eventName;
-          if (roundNumInput && typeof state.roundNum === "string")
-            roundNumInput.value = state.roundNum;
-          if (roundLabelInput && typeof state.roundLabel === "string")
-            roundLabelInput.value = state.roundLabel;
-          if (minutesInput && typeof state.minutesInput === "string")
-            minutesInput.value = state.minutesInput;
-          if (comPortInput && typeof state.comPort === "string")
-            comPortInput.value = state.comPort;
-        } catch (err) {
-          console.warn("Could not load control state", err);
-        }
-      }
 
       function openDisplay() {
         displayWindow = window.open(
           "display.html",
           "display",
-          "width=1280,height=800",
-        );
-        setTimeout(send, 900);
-      }
-      function openDisplay() {
-        displayWindow = window.open(
-          "display.html",
-          "display",
-          "width=1280,height=800",
+          "width=1920,height=1080",
         );
         setTimeout(send, 900);
       }
@@ -626,44 +495,10 @@
         configWindow = window.open(
           "config.html",
           "config",
-          "width=1280,height=800",
-        );
-      }
-      function openConfig() {
-        configWindow = window.open(
-          "config.html",
-          "config",
-          "width=1280,height=800",
+          "width=1920,height=1080",
         );
       }
 
-      function switchTab(name) {
-        const names = ["bg", "title", "sponsor", "partner"];
-        document.querySelectorAll(".tab").forEach((tab, index) => {
-          tab.classList.toggle("active", names[index] === name);
-        });
-        document
-          .querySelectorAll(".tab-panel")
-          .forEach((panel) => panel.classList.remove("active"));
-        document.getElementById(`tab-${name}`).classList.add("active");
-      }
-      function switchTab(name) {
-        const names = ["bg", "title", "sponsor", "partner"];
-        document.querySelectorAll(".tab").forEach((tab, index) => {
-          tab.classList.toggle("active", names[index] === name);
-        });
-        document
-          .querySelectorAll(".tab-panel")
-          .forEach((panel) => panel.classList.remove("active"));
-        document.getElementById(`tab-${name}`).classList.add("active");
-      }
-
-      function getNextTeamId() {
-        for (let id = 1; id <= MAX_TEAMS; id++) {
-          if (!teams.some((team) => team.id === id)) return id;
-        }
-        return null;
-      }
       function getNextTeamId() {
         for (let id = 1; id <= MAX_TEAMS; id++) {
           if (!teams.some((team) => team.id === id)) return id;
@@ -676,16 +511,7 @@
         const roundLabel = document.getElementById("roundLabel").value || "";
         return `Round ${roundNum} · ${roundLabel}`;
       }
-      function getCurrentRoundLabel() {
-        const roundNum = document.getElementById("roundNum").value || "1";
-        const roundLabel = document.getElementById("roundLabel").value || "";
-        return `Round ${roundNum} · ${roundLabel}`;
-      }
 
-      function formatCsvValue(value) {
-        const text = value == null ? "" : String(value);
-        return `"${text.replace(/"/g, '""')}"`;
-      }
       function formatCsvValue(value) {
         const text = value == null ? "" : String(value);
         return `"${text.replace(/"/g, '""')}"`;
@@ -705,24 +531,7 @@
         link.remove();
         URL.revokeObjectURL(url);
       }
-      function downloadCsv(filename, rows) {
-        const csv = rows
-          .map((row) => row.map(formatCsvValue).join(","))
-          .join("\r\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-      }
 
-      function renderTeamPool() {
-        const pool = document.getElementById("teamPool");
-        pool.innerHTML = "";
       function renderTeamPool() {
         const pool = document.getElementById("teamPool");
         pool.innerHTML = "";
@@ -731,29 +540,17 @@
           const row = document.createElement("div");
           row.className = "tr";
           row.innerHTML = `
-        teams.forEach((team, index) => {
-          const row = document.createElement("div");
-          row.className = "tr";
-          row.innerHTML = `
-          <div class="tit" onclick="document.getElementById('ifi_${team.id}').click()" style="border-color:${COLORS[index % COLORS.length]}50" title="Click to upload image">
-            ${team.img ? `<img src="${team.img}">` : `<span class="emoji-preview">${EMOJIS[index % EMOJIS.length]}</span>`}
-          </div>
-          <input type="file" accept="image/*" class="ifi" id="ifi_${team.id}" onchange="handleImg(${team.id},this)">
-          <div class="tcd" style="background:${COLORS[index % COLORS.length]}"></div>
-          <input class="ni" type="text" value="${team.name}" oninput="updateTName(${team.id},this.value)">
-          ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ""}
-          ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ""}
-        `;
-          pool.appendChild(row);
-        });
+            <div class="tit" onclick="document.getElementById('ifi_${team.id}').click()" style="border-color:${COLORS[index % COLORS.length]}50" title="Click to upload image">
+              ${team.img ? `<img src="${team.img}">` : `<span class="emoji-preview">${EMOJIS[index % EMOJIS.length]}</span>`}
+            </div>
+            <input type="file" accept="image/*" class="ifi" id="ifi_${team.id}" onchange="handleImg(${team.id},this)">
+            <div class="tcd" style="background:${COLORS[index % COLORS.length]}"></div>
+            <input class="ni" type="text" value="${team.name}" oninput="updateTName(${team.id},this.value)">
+            ${teams.length > 2 ? `<button class="rmb" onclick="removeTeam(${team.id})">✕</button>` : ""}
+          `;
           pool.appendChild(row);
         });
 
-        document.getElementById("addTeamBtn").style.display =
-          teams.length >= MAX_TEAMS ? "none" : "flex";
-        renderFinishList();
-        send();
-      }
         document.getElementById("addTeamBtn").style.display =
           teams.length >= MAX_TEAMS ? "none" : "flex";
         renderFinishList();
@@ -763,20 +560,6 @@
       function handleImg(id, input) {
         const file = input.files[0];
         if (!file) return;
-      function handleImg(id, input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          const team = teams.find((item) => item.id === id);
-          if (team) {
-            team.img = reader.result;
-            renderTeamPool();
-          }
-        };
-        reader.readAsDataURL(file);
-      }
         const reader = new FileReader();
         reader.onload = () => {
           const team = teams.find((item) => item.id === id);
@@ -796,25 +579,10 @@
           send();
         }
       }
-      function updateTName(id, name) {
-        const team = teams.find((item) => item.id === id);
-        if (team) {
-          team.name = name;
-          renderFinishList();
-          send();
-        }
-      }
 
       function addTeam() {
         const id = getNextTeamId();
         if (id == null) return;
-      function addTeam() {
-        const id = getNextTeamId();
-        if (id == null) return;
-
-        teams.push({ id, name: `Team ${id}`, img: null });
-        renderTeamPool();
-      }
         teams.push({ id, name: `Team ${id}`, img: null });
         renderTeamPool();
       }
@@ -828,32 +596,18 @@
         delete lastPushTimes[id];
         renderTeamPool();
       }
-      function clearFinishData() {
-        if (!confirm("Clear all finish times?")) return;
-      function removeTeam(id) {
-        teams = teams.filter((team) => team.id !== id);
-        finishOrder = finishOrder.filter((teamId) => teamId !== id);
-        delete finishTimes[id];
-        delete finishClocks[id];
-        delete activePushes[id];
-        delete lastPushTimes[id];
-        renderTeamPool();
-      }
-      function clearFinishData() {
-        if (!confirm("Clear all finish times?")) return;
 
+      function clearFinishData() {
+        if (!confirm("Clear all finish times?")) return;
         finishOrder = [];
         finishTimes = {};
         finishClocks = {};
-        finishOrder = [];
-        finishTimes = {};
-        finishClocks = {};
-
         logRows = logRows.filter((row) => row.recordType !== "finish");
         renderFinishList();
         renderLog();
         send();
       }
+
       function renderFinishList() {
         const list = document.getElementById("finishList");
         list.innerHTML = "";
@@ -864,62 +618,48 @@
           const row = document.createElement("div");
           row.className = `ftr${finished ? " finished" : ""}`;
           row.innerHTML = `
-          <div class="frank">${finished ? MEDALS[rank] : "·"}</div>
-        teams.forEach((team, index) => {
-          const rank = finishOrder.indexOf(team.id);
-          const finished = rank !== -1;
-          const row = document.createElement("div");
-          row.className = `ftr${finished ? " finished" : ""}`;
-          row.innerHTML = `
-          <div class="frank">${finished ? MEDALS[rank] : "·"}</div>
-          <div class="fimg">${team.img ? `<img src="${team.img}">` : `<span>${EMOJIS[index % EMOJIS.length]}</span>`}</div>
-          <div class="fname" style="color:${COLORS[index % COLORS.length]}">${team.name}</div>
-          <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ""}</div>
-          ${finished ? `<button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>` : `<button class="bfin" onclick="markFinish(${team.id})" ${!timerStarted || !timerRunning || totalSecs <= 0 ? "disabled" : ""}>🏁 Finish!</button>`}
-          <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ""}</div>
-          ${finished ? `<button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>` : `<button class="bfin" onclick="markFinish(${team.id})" ${!timerStarted || !timerRunning || totalSecs <= 0 ? "disabled" : ""}>🏁 Finish!</button>`}
-        `;
-          list.appendChild(row);
-        });
-      }
+            <div class="frank">${finished ? MEDALS[rank] : "·"}</div>
+            <div class="fimg">${team.img ? `<img src="${team.img}">` : `<span>${EMOJIS[index % EMOJIS.length]}</span>`}</div>
+            <div class="fname" style="color:${COLORS[index % COLORS.length]}">${team.name}</div>
+            <div class="ftime">${finished ? `⏱ ${finishTimes[team.id]}` : ""}</div>
+            ${
+              finished
+                ? `
+                  <div class="score-announce-zone" style="display: flex; align-items: center; gap: 6px; margin: 0 12px;">
+                    <input type="number" id="score_announce_${team.id}" placeholder="Score" value="${team.score !== undefined && team.score !== null ? team.score : ''}" style="width: 75px; padding: 4px 8px; font-size: 12px; border-radius: 6px; border: 2px solid var(--border);" />
+                    <button class="bapply" onclick="applyScore(${team.id})" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; font-family: 'Fredoka One', cursive; margin-left: 0;">Apply</button>
+                  </div>
+                  <button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>
+                `
+                : `<button class="bfin" onclick="markFinish(${team.id})" ${!isCountdownActive() ? "disabled" : ""}>🏁 Finish!</button>`
+            }
+          `;
           list.appendChild(row);
         });
       }
 
+      function applyScore(id) {
+        const input = document.getElementById(`score_announce_${id}`);
+        if (!input) return;
+        const val = input.value.trim();
+        const team = teams.find(t => t.id === id);
+        if (team) {
+          team.score = val === "" ? null : Number(val);
+          send();
+        }
+      }
+
       function markFinish(id) {
         if (
-          !timerStarted ||
-          !timerRunning ||
-          totalSecs <= 0 ||
-          finishOrder.includes(id)
-        )
-          return;
-      function markFinish(id) {
-        if (
-          !timerStarted ||
-          !timerRunning ||
-          totalSecs <= 0 ||
+          !isCountdownActive() ||
           finishOrder.includes(id)
         )
           return;
 
         finishOrder.push(id);
-        finishTimes[id] = document.getElementById("timerDisplay").textContent;
-        finishClocks[id] = new Date().toLocaleTimeString();
-        finishOrder.push(id);
-        finishTimes[id] = document.getElementById("timerDisplay").textContent;
+        finishTimes[id] = formatMMSS(localTimerState.remaining);
         finishClocks[id] = new Date().toLocaleTimeString();
 
-        const team = teams.find((item) => item.id === id);
-        const rank = finishOrder.length;
-        logRows.push({
-          recordType: "finish",
-          round: getCurrentRoundLabel(),
-          rank,
-          team: team ? team.name : "?",
-          finishTime: finishTimes[id],
-          clock: finishClocks[id],
-        });
         const team = teams.find((item) => item.id === id);
         const rank = finishOrder.length;
         logRows.push({
@@ -935,31 +675,16 @@
         renderLog();
         send();
       }
-        renderFinishList();
-        renderLog();
-        send();
-      }
 
       function unfinish(id) {
         const team = teams.find((item) => item.id === id);
         const roundLabel = getCurrentRoundLabel();
         const teamName = team ? team.name : "?";
-      function unfinish(id) {
-        const team = teams.find((item) => item.id === id);
-        const roundLabel = getCurrentRoundLabel();
-        const teamName = team ? team.name : "?";
 
-        logRows = logRows.filter(
-          (row) =>
-            !(
-              row.recordType === "finish" &&
-              row.team === teamName &&
-              row.round === roundLabel
-            ),
-        );
-        finishOrder = finishOrder.filter((teamId) => teamId !== id);
-        delete finishTimes[id];
-        delete finishClocks[id];
+        if (team) {
+          team.score = null;
+        }
+
         logRows = logRows.filter(
           (row) =>
             !(
@@ -976,23 +701,11 @@
         renderLog();
         send();
       }
-        renderFinishList();
-        renderLog();
-        send();
-      }
 
       function renderLog() {
         const body = document.getElementById("logBody");
         const finishRows = logRows.filter((row) => row.recordType === "finish");
-      function renderLog() {
-        const body = document.getElementById("logBody");
-        const finishRows = logRows.filter((row) => row.recordType === "finish");
 
-        if (!finishRows.length) {
-          body.innerHTML =
-            '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';
-          return;
-        }
         if (!finishRows.length) {
           body.innerHTML =
             '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:12px;font-size:12px;">🤖 No finishes yet</td></tr>';
@@ -1005,206 +718,147 @@
           .reverse()
           .map(
             (row) => `
-        const rankClass = (rank) =>
-          rank === 1 ? "rk1" : rank === 2 ? "rk2" : rank === 3 ? "rk3" : "rko";
-        body.innerHTML = [...finishRows]
-          .reverse()
-          .map(
-            (row) => `
-        <tr>
-          <td style="font-weight:700;font-size:10px;color:var(--muted)">${row.round}</td>
-          <td><span class="rp ${rankClass(row.rank)}">${MEDALS[row.rank - 1]} #${row.rank}</span></td>
-          <td style="font-weight:800">${row.team}</td>
-          <td style="font-weight:700">${row.finishTime}</td>
-          <td style="color:var(--muted)">${row.clock}</td>
-        </tr>
-      `,
-          )
-          .join("");
-      }
-      `,
+              <tr>
+                <td style="font-weight:700;font-size:10px;color:var(--muted)">${row.round}</td>
+                <td><span class="rp ${rankClass(row.rank)}">${MEDALS[row.rank - 1]} #${row.rank}</span></td>
+                <td style="font-weight:800">${row.team}</td>
+                <td style="font-weight:700">${row.finishTime}</td>
+                <td style="color:var(--muted)">${row.clock}</td>
+              </tr>
+            `,
           )
           .join("");
       }
 
-      function updateTimerUI() {
-        const minutes = Math.floor(totalSecs / 60);
-        const seconds = totalSecs % 60;
-        document.getElementById("timerDisplay").textContent =
-          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-        document
-          .getElementById("timerDisplay")
-          .classList.toggle("urgent", totalSecs <= 30);
-        renderFinishList();
-        send();
-      }
-      function updateTimerUI() {
-        const minutes = Math.floor(totalSecs / 60);
-        const seconds = totalSecs % 60;
-        document.getElementById("timerDisplay").textContent =
-          `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-        document
-          .getElementById("timerDisplay")
-          .classList.toggle("urgent", totalSecs <= 30);
-        renderFinishList();
-        send();
-      }
+      // ===== TIMER LOGIC =====
+      let localTimerState = { phase: 'idle', prepTotal: 30, playTotal: 120, remaining: 0, running: false };
 
-      function startTimer() {
-        if (timerInterval) return;
-        if (totalSecs <= 0) {
-          totalSecs =
-            (parseInt(document.getElementById("minutesInput").value, 10) ||
-              10) * 60;
+      function parseMMSS(str) {
+        const parts = String(str).trim().split(":");
+        if (parts.length === 2) {
+          return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
-      function startTimer() {
-        if (timerInterval) return;
-        if (totalSecs <= 0) {
-          totalSecs =
-            (parseInt(document.getElementById("minutesInput").value, 10) ||
-              10) * 60;
+        return parseInt(str) || 0;
+      }
+
+      function formatMMSS(sec) {
+        const s = Math.max(0, sec);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      function applyTimerInput(phase) {
+        const inputEl = document.getElementById(phase + "Input");
+        const seconds = parseMMSS(inputEl.value);
+        inputEl.value = formatMMSS(seconds);
+        const payload = {};
+        if (phase === "prep") payload.prepTotal = seconds;
+        else payload.playTotal = seconds;
+        socket.emit("timer-set", payload);
+      }
+
+      function timerControl(phase, action) {
+        socket.emit("timer-control", { phase, action });
+      }
+
+      function updateTimerUI(state) {
+        localTimerState = state;
+        const isPrep = state.phase === "prep";
+        const isPlay = state.phase === "play";
+        const isDone = state.phase === "done";
+
+        // --- Prep block UI ---
+        const prepDisp = document.getElementById("prepDisplay");
+        const prepBadge = document.getElementById("prepBadge");
+
+        if (isPrep) {
+          prepDisp.textContent = formatMMSS(state.remaining);
+          const warn = state.running && state.remaining <= 5;
+          prepDisp.className = "timer-display" + (warn ? " warning" : "");
+          prepBadge.textContent = state.running ? "RUNNING" : "PAUSED";
+          prepBadge.className = "timer-phase-badge " + (state.running ? "active" : "paused");
+        } else if (isDone && !isPlay) {
+          prepDisp.textContent = "00:00";
+          prepDisp.className = "timer-display done";
+          prepBadge.textContent = "DONE";
+          prepBadge.className = "timer-phase-badge paused";
+        } else {
+          prepDisp.textContent = formatMMSS(state.prepTotal);
+          prepDisp.className = "timer-display";
+          prepBadge.textContent = "IDLE";
+          prepBadge.className = "timer-phase-badge idle";
         }
 
-        timerStarted = true;
-        timerRunning = true;
-        renderFinishList();
-        timerStarted = true;
-        timerRunning = true;
-        renderFinishList();
+        // --- Play block UI ---
+        const playDisp = document.getElementById("playDisplay");
+        const playBadge = document.getElementById("playBadge");
 
-        timerInterval = setInterval(() => {
-          if (totalSecs <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerRunning = false;
-            renderFinishList();
-            send();
-            return;
-          }
-        timerInterval = setInterval(() => {
-          if (totalSecs <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timerRunning = false;
-            renderFinishList();
-            send();
-            return;
-          }
+        if (isPlay) {
+          playDisp.textContent = formatMMSS(state.remaining);
+          const warn = state.running && state.remaining <= 5;
+          playDisp.className = "timer-display" + (warn ? " warning" : "");
+          playBadge.textContent = state.running ? "RUNNING" : "PAUSED";
+          playBadge.className = "timer-phase-badge " + (state.running ? "active" : "paused");
+        } else if (isDone) {
+          playDisp.textContent = "00:00";
+          playDisp.className = "timer-display done";
+          playBadge.textContent = "DONE";
+          playBadge.className = "timer-phase-badge paused";
+        } else {
+          playDisp.textContent = formatMMSS(state.playTotal);
+          playDisp.className = "timer-display";
+          playBadge.textContent = "IDLE";
+          playBadge.className = "timer-phase-badge idle";
+        }
 
-          totalSecs--;
-          updateTimerUI();
-        }, 1000);
-      }
-          totalSecs--;
-          updateTimerUI();
-        }, 1000);
-      }
+        document.getElementById("prepInput").value = formatMMSS(state.prepTotal);
+        document.getElementById("playInput").value = formatMMSS(state.playTotal);
 
-      function pauseTimer() {
-        if (!timerInterval) return;
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerRunning = false;
         renderFinishList();
         send();
-      }
-      function pauseTimer() {
-        if (!timerInterval) return;
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerRunning = false;
-        renderFinishList();
-        send();
-      }
-
-      function applyTimer() {
-        totalSecs =
-          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
-          60;
-        updateTimerUI();
-      }
-      function applyTimer() {
-        totalSecs =
-          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
-          60;
-        updateTimerUI();
       }
 
       function resetRound() {
-        pauseTimer();
-        timerStarted = false;
-        totalSecs =
-          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
-          60;
+        if (!confirm("Are you sure you want to reset the round?")) return;
+        socket.emit("timer-control", { action: 'reset' });
         finishOrder = [];
         finishTimes = {};
         finishClocks = {};
         activePushes = {};
         lastPushTimes = {};
-        updateTimerUI();
-        renderFinishList();
-        renderLog();
-        send();
-      }
-      function resetRound() {
-        pauseTimer();
-        timerStarted = false;
-        totalSecs =
-          (parseInt(document.getElementById("minutesInput").value, 10) || 10) *
-          60;
-        finishOrder = [];
-        finishTimes = {};
-        finishClocks = {};
-        activePushes = {};
-        lastPushTimes = {};
-        updateTimerUI();
+        teams.forEach(t => {
+          t.score = null;
+        });
+        renderTeamPool();
         renderFinishList();
         renderLog();
         send();
       }
 
       function isCountdownActive() {
-        return timerStarted && timerRunning && totalSecs > 0;
-      }
-      function isCountdownActive() {
-        return timerStarted && timerRunning && totalSecs > 0;
+        return localTimerState.phase === 'play' && localTimerState.running && localTimerState.remaining > 0;
       }
 
       function updatePushState(data) {
         const teamId = Number(data.id);
         const team = teams.find((item) => item.id === teamId);
         if (!team) return;
-      function updatePushState(data) {
-        const teamId = Number(data.id);
-        const team = teams.find((item) => item.id === teamId);
-        if (!team) return;
 
         if (data.pressed) {
-          if (!isCountdownActive() || activePushes[teamId]) return;
-        if (data.pressed) {
-          if (!isCountdownActive() || activePushes[teamId]) return;
+          if (isCountdownActive() && !finishOrder.includes(teamId)) {
+            markFinish(teamId);
+          }
 
+          if (activePushes[teamId]) return;
           activePushes[teamId] = {
             teamId,
             teamName: team.name,
             round: getCurrentRoundLabel(),
             pressedAt: data.clockTime || new Date().toLocaleTimeString(),
             pressedIso: data.isoTime || new Date().toISOString(),
-            timerAtPress: document.getElementById("timerDisplay").textContent,
+            timerAtPress: formatMMSS(localTimerState.remaining),
           };
-          activePushes[teamId] = {
-            teamId,
-            teamName: team.name,
-            round: getCurrentRoundLabel(),
-            pressedAt: data.clockTime || new Date().toLocaleTimeString(),
-            pressedIso: data.isoTime || new Date().toISOString(),
-            timerAtPress: document.getElementById("timerDisplay").textContent,
-          };
-
-          lastPushTimes[teamId] = activePushes[teamId].pressedAt;
-          send();
-          return;
-        }
           lastPushTimes[teamId] = activePushes[teamId].pressedAt;
           send();
           return;
@@ -1212,18 +866,7 @@
 
         const active = activePushes[teamId];
         if (!active) return;
-        const active = activePushes[teamId];
-        if (!active) return;
 
-        const releasedAt = data.clockTime || new Date().toLocaleTimeString();
-        const releasedIso = data.isoTime || new Date().toISOString();
-        const durationSec = Number(
-          (
-            (new Date(releasedIso).getTime() -
-              new Date(active.pressedIso).getTime()) /
-            1000
-          ).toFixed(1),
-        );
         const releasedAt = data.clockTime || new Date().toLocaleTimeString();
         const releasedIso = data.isoTime || new Date().toISOString();
         const durationSec = Number(
@@ -1241,18 +884,7 @@
           pressedAt: active.pressedAt,
           releasedAt,
           timerAtPress: active.timerAtPress,
-          timerAtRelease: document.getElementById("timerDisplay").textContent,
-          durationSec:
-            Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : "",
-        });
-        pushLogs.push({
-          teamId,
-          teamName: team.name,
-          round: active.round,
-          pressedAt: active.pressedAt,
-          releasedAt,
-          timerAtPress: active.timerAtPress,
-          timerAtRelease: document.getElementById("timerDisplay").textContent,
+          timerAtRelease: formatMMSS(localTimerState.remaining),
           durationSec:
             Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : "",
         });
@@ -1261,13 +893,13 @@
         delete activePushes[teamId];
         send();
       }
-        lastPushTimes[teamId] = active.pressedAt;
-        delete activePushes[teamId];
-        send();
-      }
 
       socket.on("button-update", updatePushState);
-      socket.on("button-update", updatePushState);
+
+      socket.on("timer-state", (state) => {
+        if (!state) return;
+        updateTimerUI(state);
+      });
 
       function exportCsv() {
         const rows = [
@@ -1284,29 +916,14 @@
             "Timer At Press",
             "Timer At Release",
             "Hold Duration (sec)",
-          ],
-        ];
-      function exportCsv() {
-        const rows = [
-          [
-            "Record Type",
-            "Round",
-            "Rank",
-            "Team",
-            "Finish Time",
-            "Clock Time",
-            "Button ID",
-            "Pressed At",
-            "Released At",
-            "Timer At Press",
-            "Timer At Release",
-            "Hold Duration (sec)",
+            "Score"
           ],
         ];
 
         logRows
           .filter((row) => row.recordType === "finish")
           .forEach((row) => {
+            const teamObj = teams.find(t => t.name === row.team);
             rows.push([
               "finish",
               row.round,
@@ -1320,24 +937,7 @@
               "",
               "",
               "",
-            ]);
-          });
-        logRows
-          .filter((row) => row.recordType === "finish")
-          .forEach((row) => {
-            rows.push([
-              "finish",
-              row.round,
-              `#${row.rank}`,
-              row.team,
-              row.finishTime,
-              row.clock,
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
+              teamObj && teamObj.score != null ? teamObj.score : ""
             ]);
           });
 
@@ -1355,22 +955,7 @@
             push.timerAtPress,
             "",
             "",
-          ]);
-        });
-        Object.values(activePushes).forEach((push) => {
-          rows.push([
-            "button_press_active",
-            push.round,
-            "",
-            push.teamName,
-            "",
-            "",
-            push.teamId,
-            push.pressedAt,
-            "",
-            push.timerAtPress,
-            "",
-            "",
+            ""
           ]);
         });
 
@@ -1388,22 +973,7 @@
             push.timerAtPress,
             push.timerAtRelease,
             push.durationSec,
-          ]);
-        });
-        pushLogs.forEach((push) => {
-          rows.push([
-            "button_press",
-            push.round,
-            "",
-            push.teamName,
-            "",
-            "",
-            push.teamId,
-            push.pressedAt,
-            push.releasedAt,
-            push.timerAtPress,
-            push.timerAtRelease,
-            push.durationSec,
+            ""
           ]);
         });
 
@@ -1412,139 +982,6 @@
           rows,
         );
       }
-        downloadCsv(
-          `RoboRace_${new Date().toISOString().slice(0, 10)}.csv`,
-          rows,
-        );
-      }
-
-      function makeFileHandler(inputId, listRef, listId) {
-        document.getElementById(inputId).onchange = (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-      function makeFileHandler(inputId, listRef, listId) {
-        document.getElementById(inputId).onchange = (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          const reader = new FileReader();
-          reader.onload = () => {
-            listRef.push({
-              id: Date.now() + Math.random(),
-              src: reader.result,
-              name: file.name,
-            });
-            renderSponsorList(listRef, listId);
-            send();
-          };
-          reader.readAsDataURL(file);
-          event.target.value = "";
-        };
-      }
-          const reader = new FileReader();
-          reader.onload = () => {
-            listRef.push({
-              id: Date.now() + Math.random(),
-              src: reader.result,
-              name: file.name,
-            });
-            renderSponsorList(listRef, listId);
-            send();
-          };
-          reader.readAsDataURL(file);
-          event.target.value = "";
-        };
-      }
-
-      function renderSponsorList(arr, listId) {
-        const removeFn =
-          listId === "titleList"
-            ? "removeTitleSponsor"
-            : listId === "sponsorList"
-              ? "removeSponsor"
-              : "removePartner";
-        document.getElementById(listId).innerHTML = arr
-          .map(
-            (item) => `
-      function renderSponsorList(arr, listId) {
-        const removeFn =
-          listId === "titleList"
-            ? "removeTitleSponsor"
-            : listId === "sponsorList"
-              ? "removeSponsor"
-              : "removePartner";
-        document.getElementById(listId).innerHTML = arr
-          .map(
-            (item) => `
-        <div class="sitem">
-          <img src="${item.src}"><span>${item.name}</span>
-          <button class="rspon" onclick="${removeFn}(${item.id})">✕</button>
-        </div>
-      `,
-          )
-          .join("");
-      }
-      `,
-          )
-          .join("");
-      }
-
-      window.removeTitleSponsor = (id) => {
-        titleSponsors = titleSponsors.filter((item) => item.id !== id);
-        renderSponsorList(titleSponsors, "titleList");
-        send();
-      };
-      window.removeTitleSponsor = (id) => {
-        titleSponsors = titleSponsors.filter((item) => item.id !== id);
-        renderSponsorList(titleSponsors, "titleList");
-        send();
-      };
-
-      window.removeSponsor = (id) => {
-        sponsors = sponsors.filter((item) => item.id !== id);
-        renderSponsorList(sponsors, "sponsorList");
-        send();
-      };
-      window.removeSponsor = (id) => {
-        sponsors = sponsors.filter((item) => item.id !== id);
-        renderSponsorList(sponsors, "sponsorList");
-        send();
-      };
-
-      window.removePartner = (id) => {
-        partners = partners.filter((item) => item.id !== id);
-        renderSponsorList(partners, "partnerList");
-        send();
-      };
-      window.removePartner = (id) => {
-        partners = partners.filter((item) => item.id !== id);
-        renderSponsorList(partners, "partnerList");
-        send();
-      };
-
-      document.getElementById("backgroundInput").onchange = (event) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          bg = reader.result;
-          send();
-        };
-        reader.readAsDataURL(event.target.files[0]);
-      };
-      document.getElementById("backgroundInput").onchange = (event) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          bg = reader.result;
-          send();
-        };
-        reader.readAsDataURL(event.target.files[0]);
-      };
-
-      makeFileHandler("titleInput", titleSponsors, "titleList");
-      makeFileHandler("sponsorInput", sponsors, "sponsorList");
-      makeFileHandler("partnerInput", partners, "partnerList");
-      makeFileHandler("titleInput", titleSponsors, "titleList");
-      makeFileHandler("sponsorInput", sponsors, "sponsorList");
-      makeFileHandler("partnerInput", partners, "partnerList");
 
       function send() {
         const payload = {
@@ -1558,53 +995,21 @@
               ? finishOrder.indexOf(team.id) + 1
               : null,
             finishTime: finishTimes[team.id] || null,
+            score: team.score !== undefined ? team.score : null
           })),
           finishOrder,
-          timer: document.getElementById("timerDisplay").textContent,
-          timerUrgent: totalSecs <= 30,
-          timerRunning,
-          timerStarted,
+          timer: formatMMSS(localTimerState.remaining),
+          timerUrgent: localTimerState.running && localTimerState.remaining <= 5,
+          timerRunning: localTimerState.running,
+          timerStarted: localTimerState.phase !== 'idle',
           eventName: document.getElementById("eventName").value,
           roundNum: document.getElementById("roundNum").value,
           roundLabel: document.getElementById("roundLabel").value,
-          background: bg,
-          pushState: {
-            activePushes,
-            lastPushTimes,
-          },
-          titleSponsors,
-          sponsors,
-          partners,
-        };
-      function send() {
-        const payload = {
-          teams: teams.map((team, index) => ({
-            id: team.id,
-            name: team.name,
-            img: team.img,
-            color: COLORS[index % COLORS.length],
-            emoji: EMOJIS[index % EMOJIS.length],
-            rank: finishOrder.includes(team.id)
-              ? finishOrder.indexOf(team.id) + 1
-              : null,
-            finishTime: finishTimes[team.id] || null,
-          })),
-          finishOrder,
-          timer: document.getElementById("timerDisplay").textContent,
-          timerUrgent: totalSecs <= 30,
-          timerRunning,
-          timerStarted,
-          eventName: document.getElementById("eventName").value,
-          roundNum: document.getElementById("roundNum").value,
-          roundLabel: document.getElementById("roundLabel").value,
-          background: bg,
-          pushState: {
-            activePushes,
-            lastPushTimes,
-          },
-          titleSponsors,
-          sponsors,
-          partners,
+          background: undefined,
+          pushState: { activePushes, lastPushTimes },
+          titleSponsors: [],
+          sponsors: [],
+          partners: [],
         };
 
         try {
@@ -1612,43 +1017,14 @@
         } catch (err) {
           console.warn("Could not save display state", err);
         }
-        try {
-          localStorage.setItem(DISPLAY_STATE_KEY, JSON.stringify(payload));
-        } catch (err) {
-          console.warn("Could not save display state", err);
-        }
 
-        // Send via socket.io
         if (socket && socket.connected) {
           socket.emit("display-update", payload);
-          console.log("Display update sent via socket.io");
-        } else {
-          console.warn(
-            "Socket not connected, updates will be sent when reconnected",
-          );
-        }
-        // Send via socket.io
-        if (socket && socket.connected) {
-          socket.emit("display-update", payload);
-          console.log("Display update sent via socket.io");
-        } else {
-          console.warn(
-            "Socket not connected, updates will be sent when reconnected",
-          );
         }
 
         saveState();
       }
-        saveState();
-      }
 
-      // Update connection UI when server reports Arduino status or serial info
-      function updateConnectionUI(open, path) {
-        const pill = document.getElementById("connection-pill");
-        const text = document.getElementById("connection-text");
-        const input = document.getElementById("comPortInput");
-        if (!pill || !text || !input) return;
-      // Update connection UI when server reports Arduino status or serial info
       function updateConnectionUI(open, path) {
         const pill = document.getElementById("connection-pill");
         const text = document.getElementById("connection-text");
@@ -1662,30 +1038,14 @@
           pill.classList.remove("connected");
           text.textContent = "Disconnected";
         }
-        if (open) {
-          pill.classList.add("connected");
-          text.textContent = "Connected";
-        } else {
-          pill.classList.remove("connected");
-          text.textContent = "Disconnected";
-        }
 
-        if (typeof path === "string" && path) input.value = path;
-      }
         if (typeof path === "string" && path) input.value = path;
       }
 
       socket.on("arduino-status", (isConnected) => {
         updateConnectionUI(Boolean(isConnected));
       });
-      socket.on("arduino-status", (isConnected) => {
-        updateConnectionUI(Boolean(isConnected));
-      });
 
-      socket.on("serial-info", (info) => {
-        if (!info) return;
-        updateConnectionUI(Boolean(info.open), info.path);
-      });
       socket.on("serial-info", (info) => {
         if (!info) return;
         updateConnectionUI(Boolean(info.open), info.path);
@@ -1701,34 +1061,13 @@
         if (text) text.textContent = "Applying...";
         saveState();
       }
-      function applyComPort() {
-        const input = document.getElementById("comPortInput");
-        if (!input) return;
-        const newPath = input.value && input.value.trim();
-        if (!newPath) return;
-        socket.emit("set-serial", { path: newPath });
-        const text = document.getElementById("connection-text");
-        if (text) text.textContent = "Applying...";
-        saveState();
-      }
 
+      // ── Init ────────────────────────────────────────────────────
       loadState();
-      loadState();
-
-      renderSponsorList(titleSponsors, "titleList");
-      renderSponsorList(sponsors, "sponsorList");
-      renderSponsorList(partners, "partnerList");
-      renderSponsorList(titleSponsors, "titleList");
-      renderSponsorList(sponsors, "sponsorList");
-      renderSponsorList(partners, "partnerList");
 
       renderTeamPool();
       renderLog();
-      updateTimerUI();
-      renderTeamPool();
-      renderLog();
-      updateTimerUI();
+      updateTimerUI(localTimerState);
     </script>
   </body>
 </html>
-

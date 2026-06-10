@@ -1,63 +1,283 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>RoboRace Display</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Fredoka+One&display=swap"
-      rel="stylesheet">
-    <link rel="stylesheet" href="/style/display.css">
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style/display.css" />
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body>
+    <!-- Last 5 seconds warning overlay & countdown pop -->
+    <div id="warningOverlay"></div>
+    <div id="countdownBoom"></div>
 
     <!-- BG layers -->
     <div id="bg-custom"></div>
     <div id="bg-robots">
       <!-- Dense robot pattern — big ones anchored, small ones drifting -->
-      <div class="bg-robo"
-        style="--sz:90px;left:2%;top:12%;--dur:14s;--del:-2s;--mx:18px;--my:-28px;--mx2:-12px;--my2:22px;--r0:-5deg;--r1:8deg;--r2:-6deg;">🤖</div>
-      <div class="bg-robo"
-        style="--sz:70px;left:88%;top:8%;--dur:17s;--del:-6s;--mx:-20px;--my:-22px;--mx2:16px;--my2:30px;--r0:4deg;--r1:-10deg;--r2:7deg;">🤖</div>
-      <div class="bg-robo"
-        style="--sz:55px;left:48%;top:6%;--dur:20s;--del:-10s;--mx:24px;--my:-18px;--mx2:-18px;--my2:24px;--r0:-3deg;--r1:12deg;--r2:-9deg;">⚙️</div>
-      <div class="bg-robo"
-        style="--sz:80px;left:15%;top:60%;--dur:15s;--del:-4s;--mx:-22px;--my:-32px;--mx2:18px;--my2:16px;--r0:6deg;--r1:-8deg;--r2:10deg;">🦾</div>
-      <div class="bg-robo"
-        style="--sz:65px;left:75%;top:55%;--dur:19s;--del:-8s;--mx:16px;--my:-26px;--mx2:-14px;--my2:20px;--r0:-7deg;--r1:9deg;--r2:-5deg;">⚙️</div>
-      <div class="bg-robo"
-        style="--sz:50px;left:32%;top:78%;--dur:22s;--del:-14s;--mx:-18px;--my:-20px;--mx2:22px;--my2:14px;--r0:3deg;--r1:-11deg;--r2:8deg;">🔩</div>
-      <div class="bg-robo"
-        style="--sz:60px;left:62%;top:82%;--dur:16s;--del:-3s;--mx:20px;--my:-24px;--mx2:-16px;--my2:18px;--r0:-4deg;--r1:7deg;--r2:-9deg;">🤖</div>
-      <div class="bg-robo"
-        style="--sz:44px;left:5%;top:82%;--dur:25s;--del:-18s;--mx:-12px;--my:-16px;--mx2:10px;--my2:20px;--r0:5deg;--r1:-6deg;--r2:4deg;">🧠</div>
-      <div class="bg-robo"
-        style="--sz:42px;left:92%;top:70%;--dur:23s;--del:-9s;--mx:14px;--my:-18px;--mx2:-10px;--my2:22px;--r0:-6deg;--r1:8deg;--r2:-4deg;">🔧</div>
-      <div class="bg-robo"
-        style="--sz:38px;left:55%;top:30%;--dur:27s;--del:-20s;--mx:-16px;--my:-14px;--mx2:12px;--my2:18px;--r0:2deg;--r1:-9deg;--r2:7deg;">👾</div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 90px;
+          left: 2%;
+          top: 12%;
+          --dur: 14s;
+          --del: -2s;
+          --mx: 18px;
+          --my: -28px;
+          --mx2: -12px;
+          --my2: 22px;
+          --r0: -5deg;
+          --r1: 8deg;
+          --r2: -6deg;
+        "
+      >
+        🤖
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 70px;
+          left: 88%;
+          top: 8%;
+          --dur: 17s;
+          --del: -6s;
+          --mx: -20px;
+          --my: -22px;
+          --mx2: 16px;
+          --my2: 30px;
+          --r0: 4deg;
+          --r1: -10deg;
+          --r2: 7deg;
+        "
+      >
+        🤖
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 55px;
+          left: 48%;
+          top: 6%;
+          --dur: 20s;
+          --del: -10s;
+          --mx: 24px;
+          --my: -18px;
+          --mx2: -18px;
+          --my2: 24px;
+          --r0: -3deg;
+          --r1: 12deg;
+          --r2: -9deg;
+        "
+      >
+        ⚙️
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 80px;
+          left: 15%;
+          top: 60%;
+          --dur: 15s;
+          --del: -4s;
+          --mx: -22px;
+          --my: -32px;
+          --mx2: 18px;
+          --my2: 16px;
+          --r0: 6deg;
+          --r1: -8deg;
+          --r2: 10deg;
+        "
+      >
+        🦾
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 65px;
+          left: 75%;
+          top: 55%;
+          --dur: 19s;
+          --del: -8s;
+          --mx: 16px;
+          --my: -26px;
+          --mx2: -14px;
+          --my2: 20px;
+          --r0: -7deg;
+          --r1: 9deg;
+          --r2: -5deg;
+        "
+      >
+        ⚙️
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 50px;
+          left: 32%;
+          top: 78%;
+          --dur: 22s;
+          --del: -14s;
+          --mx: -18px;
+          --my: -20px;
+          --mx2: 22px;
+          --my2: 14px;
+          --r0: 3deg;
+          --r1: -11deg;
+          --r2: 8deg;
+        "
+      >
+        🔩
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 60px;
+          left: 62%;
+          top: 82%;
+          --dur: 16s;
+          --del: -3s;
+          --mx: 20px;
+          --my: -24px;
+          --mx2: -16px;
+          --my2: 18px;
+          --r0: -4deg;
+          --r1: 7deg;
+          --r2: -9deg;
+        "
+      >
+        🤖
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 44px;
+          left: 5%;
+          top: 82%;
+          --dur: 25s;
+          --del: -18s;
+          --mx: -12px;
+          --my: -16px;
+          --mx2: 10px;
+          --my2: 20px;
+          --r0: 5deg;
+          --r1: -6deg;
+          --r2: 4deg;
+        "
+      >
+        🧠
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 42px;
+          left: 92%;
+          top: 70%;
+          --dur: 23s;
+          --del: -9s;
+          --mx: 14px;
+          --my: -18px;
+          --mx2: -10px;
+          --my2: 22px;
+          --r0: -6deg;
+          --r1: 8deg;
+          --r2: -4deg;
+        "
+      >
+        🔧
+      </div>
+      <div
+        class="bg-robo"
+        style="
+          --sz: 38px;
+          left: 55%;
+          top: 30%;
+          --dur: 27s;
+          --del: -20s;
+          --mx: -16px;
+          --my: -14px;
+          --mx2: 12px;
+          --my2: 18px;
+          --r0: 2deg;
+          --r1: -9deg;
+          --r2: 7deg;
+        "
+      >
+        👾
+      </div>
       <!-- Gears as SVG circles for extra depth -->
-      <svg class="gear-svg"
-        style="--spd:30s;left:10%;top:40%;width:120px;height:120px;"
-        viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="30" fill="none" stroke="#3B82F6"
-          stroke-width="6" stroke-dasharray="8 4" />
-        <circle cx="50" cy="50" r="18" fill="none" stroke="#3B82F6"
-          stroke-width="3" />
+      <svg
+        class="gear-svg"
+        style="--spd: 30s; left: 10%; top: 40%; width: 120px; height: 120px"
+        viewBox="0 0 100 100"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="30"
+          fill="none"
+          stroke="#3B82F6"
+          stroke-width="6"
+          stroke-dasharray="8 4"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="18"
+          fill="none"
+          stroke="#3B82F6"
+          stroke-width="3"
+        />
       </svg>
-      <svg class="gear-svg"
-        style="--spd:22s;left:82%;top:25%;width:90px;height:90px;animation-direction:reverse;"
-        viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="28" fill="none" stroke="#8B5CF6"
-          stroke-width="5" stroke-dasharray="6 3" />
-        <circle cx="50" cy="50" r="15" fill="none" stroke="#8B5CF6"
-          stroke-width="3" />
+      <svg
+        class="gear-svg"
+        style="
+          --spd: 22s;
+          left: 82%;
+          top: 25%;
+          width: 90px;
+          height: 90px;
+          animation-direction: reverse;
+        "
+        viewBox="0 0 100 100"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="28"
+          fill="none"
+          stroke="#8B5CF6"
+          stroke-width="5"
+          stroke-dasharray="6 3"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r="15"
+          fill="none"
+          stroke="#8B5CF6"
+          stroke-width="3"
+        />
       </svg>
-      <svg class="gear-svg"
-        style="--spd:40s;left:45%;top:65%;width:70px;height:70px;"
-        viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="25" fill="none" stroke="#22C55E"
-          stroke-width="4" stroke-dasharray="5 4" />
+      <svg
+        class="gear-svg"
+        style="--spd: 40s; left: 45%; top: 65%; width: 70px; height: 70px"
+        viewBox="0 0 100 100"
+      >
+        <circle
+          cx="50"
+          cy="50"
+          r="25"
+          fill="none"
+          stroke="#22C55E"
+          stroke-width="4"
+          stroke-dasharray="5 4"
+        />
       </svg>
     </div>
 
@@ -69,17 +289,21 @@
 
     <!-- TOP BAR -->
     <div class="top-bar">
-      <div class="event-label !text-5xl" id="eventLabel">Robot Think ·
-        Competition ·
-        2026</div>
-      <div class="round-pill !text-2xl" id="roundPill">Round 1 ·
-        Qualifying</div>
+      <div class="event-label !text-5xl" id="eventLabel">
+        Robot Think · Competition · 2026
+      </div>
+      <div class="round-pill !text-2xl" id="roundPill">
+        Round 1 · Qualifying
+      </div>
     </div>
 
-    <!-- TIMER -->
-    <div class="timer-wrap">
-      <div class="timer-lbl !text-md">⏱ Match Time</div>
-      <div class="timer-val !text-7xl" id="timerVal">10:00</div>
+    <!-- ===== TIMER BAR (top center) ===== -->
+    <div class="timer-bar-top" id="timerBarTop">
+      <div class="timer-phase-chip" id="timerPhaseChip">STANDBY</div>
+
+      <div class="timer-digits !text-5xl" id="timerCountdown">--:--</div>
+
+      <div class="timer-phase-chip" id="timerPhaseChip2">STANDBY</div>
     </div>
 
     <!-- TEAMS -->
@@ -106,285 +330,387 @@
     </div>
 
     <script>
-const MEDALS=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
-const CC=['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6','#EC4899','#F97316'];
-    const DISPLAY_STATE_KEY = 'robothink-display-state';
-let prevFO=[];
-let lastTeams=[];
-let lastFinishOrder=[];
-const pressedTeams={};
-const pushedTimes={};
-let matchSeconds = 10;
-let matchRunning = false;
-let matchStarted = false;
-function updateTimerDisplay() {
-  const timerEl = document.getElementById("timerVal");
+      const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
+      const CC = [
+        "#3B82F6",
+        "#EF4444",
+        "#22C55E",
+        "#F59E0B",
+        "#8B5CF6",
+        "#EC4899",
+        "#F97316",
+      ];
+      const DISPLAY_STATE_KEY = "robothink-display-state";
+      let prevFO = [];
+      let lastTeams = [];
+      let lastFinishOrder = [];
+      const pressedTeams = {};
+      const pushedTimes = {};
 
-  const mins = String(Math.floor(matchSeconds / 60)).padStart(2, "0");
-  const secs = String(matchSeconds % 60).padStart(2, "0");
+      function formatMMSS(sec) {
+        const s = Math.max(0, sec);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
 
-  timerEl.textContent = `${mins}:${secs}`;
-}
+      let lastBoomedSecond = -1;
 
-function startMatchTimer() {
+      function applyButtonState(data) {
+        if (!data || data.id == null) return;
 
-  if (matchRunning) return;
+        const isPressed = data.pressed === true || data.state === "true";
+        const isReady = data.ready === true || data.state === "ready";
+        const isReleased =
+          isReady || data.pressed === false || data.state === "false";
+        const matchTimer =
+          document.getElementById("timerCountdown")?.textContent || "00:00";
 
-  matchStarted = true;
-  matchRunning = true;
-  matchSeconds = 10;
-
-  updateTimerDisplay();
-
-  const interval = setInterval(() => {
-
-    matchSeconds--;
-
-    updateTimerDisplay();
-
-    if (matchSeconds <= 0) {
-
-      clearInterval(interval);
-
-      matchRunning = false;
-      matchSeconds = 0;
-
-      updateTimerDisplay();
-
-      console.log("MATCH ENDED");
-    }
-
-  }, 1000);
-}
-function applyButtonState(data) {
-  if (!data || data.id == null) return;
-
-  const isPressed = data.pressed === true || data.state === 'true';
-  const isReady = data.ready === true || data.state === 'ready';
-  const isReleased = isReady || data.pressed === false || data.state === 'false';
-  const matchTimer = document.getElementById('timerVal')?.textContent || '00:00';
-
-  if (isPressed) {
-    pressedTeams[data.id] = true;
-    pushedTimes[data.id] = data.clockTime || matchTimer;
-  } else if (isReleased) {
-    delete pressedTeams[data.id];
-    pushedTimes[data.id] = pushedTimes[data.id] || data.clockTime || matchTimer;
-  }
-}
-
-function spawnConfetti(x,y){
-  for(let i=0;i<24;i++){
-    const el=document.createElement('div');
-    el.className='cf';
-    el.style.cssText=`left:${x+(Math.random()-.5)*200}px;top:${y}px;
-      background:${CC[Math.floor(Math.random()*CC.length)]};
-      border-radius:${Math.random()>.5?'50%':'3px'};
-      width:${7+Math.random()*9}px;height:${7+Math.random()*9}px;
-      animation-delay:${Math.random()*.35}s;`;
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(),1800);
-  }
-}
-
-function renderTeams(teams,fo){
-  lastTeams=teams||[];
-  lastFinishOrder=fo||[];
-  const grid=document.getElementById('teams-grid');
-  // sync cards
-  const existIds=new Set([...grid.children].map(c=>c.id));
-  const newIds=new Set(teams.map(t=>'tc_'+t.id));
-  // remove deleted
-  [...grid.children].forEach(c=>{ if(!newIds.has(c.id)) c.remove(); });
-
-  teams.forEach((t,i)=>{
-    const rank=fo.includes(t.id)?fo.indexOf(t.id)+1:null;
-    const held=!!pressedTeams[t.id];
-    let card=document.getElementById('tc_'+t.id);
-    if(!card){
-      card=document.createElement('div');
-      card.id='tc_'+t.id;
-      grid.appendChild(card);
-    }
-    const wasFinished=prevFO.includes(t.id);
-    const justFinished=!wasFinished&&!!rank;
-
-    // set CSS var for colour
-    const tc=t.color||'#3B82F6';
-    card.style.setProperty('--tc',tc);
-    card.style.setProperty('--tc-soft',tc+'12');
-    card.className='team-card'+(rank?' finished':'')+(rank===1?' rank-1':'')+(held?' holding':'');
-
-    const fdur=(2.5+i*.4)+'s';
-    const fdel=(i*.3)+'s';
-    const pushTime=pushedTimes[t.id]||'';
-    const statusText=held ? '⏸ STOPPED' : (rank?`#${rank} FINISHED`:'READY');
-    const statusClass=held ? 's-hold' : (rank?'s-done':'s-wait');
-
-    card.innerHTML=`
-      ${rank?`<div class="rank-badge">${MEDALS[rank-1]}</div>`:''}
-      <div class="team-img-wrap">
-        ${t.img
-          ?`<img class="img-float" style="--fdur:${fdur};--fdel:${fdel}" src="${t.img}">`
-          :`<span class="emoji-bob" style="--fdur:${fdur};--fdel:${fdel}">${t.emoji||'🤖'}</span>`}
-      </div>
-      <div class="team-name-text">${t.name}</div>
-      <div class="status-chip ${statusClass}" style="${rank&&!held?`background:${tc};border-color:${tc}`:held?`background:#FFFBEB;border-color:#FCD34D;color:#B45309;`:''}">
-        ${statusText}
-      </div>
-      <div class="push-chip" style="display:${pushTime?'block':'none'};${pushTime?`border-color:${tc}40;color:${tc};background:${tc}10;`:''}">
-        ${pushTime ? `${held ? 'Pressed' : 'Last push'} ${pushTime}` : ''}
-      </div>
-      <div class="finish-chip" style="color:${tc};background:${tc}18;border:2px solid ${tc}40;">
-        ⏱ ${t.finishTime||''}
-      </div>
-    `;
-
-    if(justFinished){
-      const r=card.getBoundingClientRect();
-      spawnConfetti(r.left+r.width/2,r.top+r.height/2);
-    }
-  });
-  prevFO=[...fo];
-}
-
-function setLogos(colId, containerId, items){
-  const col=document.getElementById(colId);
-  const cont=document.getElementById(containerId);
-  if(!items||!items.length){
-    col.classList.remove('has-logos');
-  } else {
-    col.classList.add('has-logos');
-    cont.innerHTML=items.map((s,i)=>`<img src="${s.src}" style="--li:${i}" alt="">`).join('');
-  }
-  // show/hide the whole bar based on whether any col is active
-  const anyVisible=[...document.querySelectorAll('.sp-col')].some(c=>c.classList.contains('has-logos'));
-  document.getElementById('bottomBar').classList.toggle('visible',anyVisible);
-}
-
-function applyDisplayState(d) {
-  if (!d) return;
-
-  if(d.eventName)
-    document.getElementById('eventLabel').textContent = d.eventName;
-
-  if(d.roundNum != null || d.roundLabel != null)
-    document.getElementById('roundPill').textContent =
-      `Round ${d.roundNum || '1'} · ${d.roundLabel || ''}`;
-
-  const tv = document.getElementById('timerVal');
-  tv.textContent = d.timer || '00:00';
-  tv.classList.toggle('urgent', !!d.timerUrgent);
-
-  if(d.background)
-    document.getElementById('bg-custom').style.backgroundImage =
-      `url(${d.background})`;
-
-  if(d.pushState){
-    const active = d.pushState.activePushes || {};
-    const last = d.pushState.lastPushTimes || {};
-    Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
-    Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
-    Object.entries(active).forEach(([id, info]) => {
-      pressedTeams[id] = true;
-      pushedTimes[id] = info.pressedAt || '';
-    });
-    Object.entries(last).forEach(([id, time]) => {
-      if (time) pushedTimes[id] = time;
-    });
-  }
-
-  if(d.teams)
-    renderTeams(d.teams, d.finishOrder || []);
-
-  setLogos('colTitle','logosTitle',d.titleSponsors);
-  setLogos('colSponsor','logosSponsor',d.sponsors);
-  setLogos('colPartner','logosPartner',d.partners);
-}
-const socket = io({
-  reconnection: true,
-  reconnectionDelay: 100,
-  reconnectionDelayMax: 5000,
-  reconnectionAttempts: Infinity,
-  transports: ['websocket', 'polling']
-});
-
-socket.on('connect', () => {
-  console.log('Socket connected');
-});
-
-socket.on('disconnect', () => {
-  console.log('Socket disconnected');
-});
-
-socket.on('connect_error', (error) => {
-  console.error('Socket connection error:', error);
-});
-
-socket.on("display-update", (d) => {
-  console.log('Display update received:', d);
-  if (d && Object.keys(d).length > 0) {
-    applyDisplayState(d);
-  }
-});
-
-socket.on("button-update", (data) => {
-  console.log('Button update received:', data);
-  applyButtonState(data);
-
-  if (lastTeams.length) {
-    renderTeams(lastTeams, lastFinishOrder);
-  }
-});
-
-socket.on("button-state-update", (states) => {
-  console.log('Button state update received:', states);
-  Object.keys(pressedTeams).forEach(id => delete pressedTeams[id]);
-  Object.keys(pushedTimes).forEach(id => delete pushedTimes[id]);
-
-  (states || []).forEach(applyButtonState);
-
-  if (lastTeams.length) {
-    renderTeams(lastTeams, lastFinishOrder);
-  }
-});
-function loadSharedDisplayState() {
-  try {
-    const raw = localStorage.getItem(DISPLAY_STATE_KEY);
-    if (!raw) return;
-    applyDisplayState(JSON.parse(raw));
-  } catch (err) {
-    console.warn('Could not load shared display state', err);
-  }
-}
-
-window.addEventListener('storage', (event) => {
-  if (event.key !== DISPLAY_STATE_KEY || !event.newValue) return;
-  try {
-    applyDisplayState(JSON.parse(event.newValue));
-  } catch (err) {
-    console.warn('Could not apply shared display state', err);
-  }
-});
-loadSharedDisplayState();
-
-// Fallback: poll for changes from localStorage every 500ms if socket isn't working
-setInterval(() => {
-  if (!socket.connected) {
-    try {
-      const raw = localStorage.getItem(DISPLAY_STATE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data && Object.keys(data).length > 0) {
-          applyDisplayState(data);
+        if (isPressed) {
+          pressedTeams[data.id] = true;
+          pushedTimes[data.id] = data.clockTime || matchTimer;
+        } else if (isReleased) {
+          delete pressedTeams[data.id];
+          pushedTimes[data.id] =
+            pushedTimes[data.id] || data.clockTime || matchTimer;
         }
       }
-    } catch (err) {
-      // Silent fallback
-    }
-  }
-}, 500);
 
-</script>
+      function spawnConfetti(x, y) {
+        for (let i = 0; i < 24; i++) {
+          const el = document.createElement("div");
+          el.className = "cf";
+          el.style.cssText = `left:${x + (Math.random() - 0.5) * 200}px;top:${y}px;
+      background:${CC[Math.floor(Math.random() * CC.length)]};
+      border-radius:${Math.random() > 0.5 ? "50%" : "3px"};
+      width:${7 + Math.random() * 9}px;height:${7 + Math.random() * 9}px;
+      animation-delay:${Math.random() * 0.35}s;`;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1800);
+        }
+      }
+
+      function renderTeams(teams, fo) {
+        lastTeams = teams || [];
+        lastFinishOrder = fo || [];
+        const grid = document.getElementById("teams-grid");
+        // sync cards
+        const existIds = new Set([...grid.children].map((c) => c.id));
+        const newIds = new Set(teams.map((t) => "tc_" + t.id));
+        // remove deleted
+        [...grid.children].forEach((c) => {
+          if (!newIds.has(c.id)) c.remove();
+        });
+
+        teams.forEach((t, i) => {
+          const rank = fo.includes(t.id) ? fo.indexOf(t.id) + 1 : null;
+          const held = !!pressedTeams[t.id];
+          let card = document.getElementById("tc_" + t.id);
+          if (!card) {
+            card = document.createElement("div");
+            card.id = "tc_" + t.id;
+            grid.appendChild(card);
+          }
+          const wasFinished = prevFO.includes(t.id);
+          const justFinished = !wasFinished && !!rank;
+
+          // set CSS var for colour
+          const tc = t.color || "#3B82F6";
+          card.style.setProperty("--tc", tc);
+          card.style.setProperty("--tc-soft", tc + "12");
+          card.className =
+            "team-card" +
+            (rank ? " finished" : "") +
+            (rank === 1 ? " rank-1" : "") +
+            (held ? " holding" : "");
+
+          const fdur = 2.5 + i * 0.4 + "s";
+          const fdel = i * 0.3 + "s";
+          const pushTime = pushedTimes[t.id] || "";
+          const statusText = held
+            ? "⏸ STOPPED"
+            : rank
+              ? `#${rank} FINISHED`
+              : "READY";
+          const statusClass = held ? "s-hold" : rank ? "s-done" : "s-wait";
+
+          card.innerHTML = `
+      ${rank ? `<div class="rank-badge">${MEDALS[rank - 1]}</div>` : ""}
+      <div class="team-img-wrap">
+        ${
+          t.img
+            ? `<img class="img-float" style="--fdur:${fdur};--fdel:${fdel}" src="${t.img}">`
+            : `<span class="emoji-bob" style="--fdur:${fdur};--fdel:${fdel}">${t.emoji || "🤖"}</span>`
+        }
+      </div>
+      <div class="team-name-text">${t.name}</div>
+      <div class="status-chip ${statusClass}" style="${rank && !held ? `background:${tc};border-color:${tc}` : held ? `background:#FFFBEB;border-color:#FCD34D;color:#B45309;` : ""}">
+        ${statusText}
+      </div>
+      <div class="push-chip" style="display:${pushTime ? "block" : "none"};${pushTime ? `border-color:${tc}40;color:${tc};background:${tc}10;` : ""}">
+        ${pushTime ? `${held ? "Pressed" : "Last push"} ${pushTime}` : ""}
+      </div>
+      <div class="finish-chip" style="color:${tc};background:${tc}18;border:2px solid ${tc}40;">
+        ⏱ ${t.finishTime || ""}
+      </div>
+      ${
+        t.score !== undefined && t.score !== null && t.score !== ""
+          ? `
+        <div class="score-announce-badge">
+          ⭐ SCORE: ${t.score}
+        </div>
+      `
+          : ""
+      }
+    `;
+
+          if (justFinished) {
+            const r = card.getBoundingClientRect();
+            spawnConfetti(r.left + r.width / 2, r.top + r.height / 2);
+          }
+        });
+        prevFO = [...fo];
+      }
+
+      function setLogos(colId, containerId, items) {
+        const col = document.getElementById(colId);
+        const cont = document.getElementById(containerId);
+        if (!items || !items.length) {
+          col.classList.remove("has-logos");
+        } else {
+          col.classList.add("has-logos");
+          cont.innerHTML = items
+            .map((s, i) => `<img src="${s.src}" style="--li:${i}" alt="">`)
+            .join("");
+        }
+        // show/hide the whole bar based on whether any col is active
+        const anyVisible = [...document.querySelectorAll(".sp-col")].some((c) =>
+          c.classList.contains("has-logos"),
+        );
+        document
+          .getElementById("bottomBar")
+          .classList.toggle("visible", anyVisible);
+      }
+
+      function applyDisplayState(d) {
+        if (!d) return;
+
+        if (d.eventName)
+          document.getElementById("eventLabel").textContent = d.eventName;
+
+        if (d.roundNum != null || d.roundLabel != null)
+          document.getElementById("roundPill").textContent =
+            `Round ${d.roundNum || "1"} · ${d.roundLabel || ""}`;
+
+        const countdown = document.getElementById("timerCountdown");
+        if (countdown && d.timer && !socket.connected) {
+          countdown.textContent = d.timer;
+        }
+
+        if (d.background)
+          document.getElementById("bg-custom").style.backgroundImage =
+            `url(${d.background})`;
+
+        if (d.pushState) {
+          const active = d.pushState.activePushes || {};
+          const last = d.pushState.lastPushTimes || {};
+          Object.keys(pressedTeams).forEach((id) => delete pressedTeams[id]);
+          Object.keys(pushedTimes).forEach((id) => delete pushedTimes[id]);
+          Object.entries(active).forEach(([id, info]) => {
+            pressedTeams[id] = true;
+            pushedTimes[id] = info.pressedAt || "";
+          });
+          Object.entries(last).forEach(([id, time]) => {
+            if (time) pushedTimes[id] = time;
+          });
+        }
+
+        if (d.teams) renderTeams(d.teams, d.finishOrder || []);
+
+        setLogos("colTitle", "logosTitle", d.titleSponsors);
+        setLogos("colSponsor", "logosSponsor", d.sponsors);
+        setLogos("colPartner", "logosPartner", d.partners);
+      }
+      const socket = io({
+        reconnection: true,
+        reconnectionDelay: 100,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: Infinity,
+        transports: ["websocket", "polling"],
+      });
+
+      socket.on("connect", () => {
+        console.log("Socket connected");
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket disconnected");
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+      });
+
+      socket.on("display-update", (d) => {
+        console.log("Display update received:", d);
+        if (d && Object.keys(d).length > 0) {
+          applyDisplayState(d);
+        }
+      });
+
+      socket.on("button-update", (data) => {
+        console.log("Button update received:", data);
+        applyButtonState(data);
+
+        if (lastTeams.length) {
+          renderTeams(lastTeams, lastFinishOrder);
+        }
+      });
+
+      socket.on("button-state-update", (states) => {
+        console.log("Button state update received:", states);
+        Object.keys(pressedTeams).forEach((id) => delete pressedTeams[id]);
+        Object.keys(pushedTimes).forEach((id) => delete pushedTimes[id]);
+
+        (states || []).forEach(applyButtonState);
+
+        if (lastTeams.length) {
+          renderTeams(lastTeams, lastFinishOrder);
+        }
+      });
+
+      socket.on("timer-state", (state) => {
+        if (!state) return;
+
+        const countdown = document.getElementById("timerCountdown");
+        const chip1 = document.getElementById("timerPhaseChip");
+        const chip2 = document.getElementById("timerPhaseChip2");
+        const overlay = document.getElementById("warningOverlay");
+        const boom = document.getElementById("countdownBoom");
+
+        const isRunning = state.running;
+        const phase = state.phase;
+        const remaining = state.remaining;
+        const isWarning =
+          isRunning &&
+          remaining <= 5 &&
+          remaining > 0 &&
+          (phase === "prep" || phase === "play");
+        const isDone = phase === "done";
+
+        if (phase === "prep" && (isRunning || remaining > 0)) {
+          const cls = "timer-phase-chip prep" + (isWarning ? " warning" : "");
+          const digCls =
+            "timer-digits prep-active" + (isWarning ? " warning" : "");
+          chip1.textContent = isWarning
+            ? "⚠ LAST " + remaining + "s"
+            : "PREPARATION";
+          chip2.textContent = isWarning
+            ? "⚠ LAST " + remaining + "s"
+            : "PREPARATION";
+          chip1.className = cls;
+          chip2.className = cls;
+          countdown.textContent = formatMMSS(remaining);
+          countdown.className = digCls;
+        } else if (phase === "play" && (isRunning || remaining > 0)) {
+          const cls = "timer-phase-chip play" + (isWarning ? " warning" : "");
+          const digCls =
+            "timer-digits play-active" + (isWarning ? " warning" : "");
+          chip1.textContent = isWarning
+            ? "⚠ LAST " + remaining + "s"
+            : "PLAY TIME";
+          chip2.textContent = isWarning
+            ? "⚠ LAST " + remaining + "s"
+            : "PLAY TIME";
+          chip1.className = cls;
+          chip2.className = cls;
+          countdown.textContent = formatMMSS(remaining);
+          countdown.className = digCls;
+        } else if (isDone) {
+          chip1.textContent = "TIME'S UP";
+          chip2.textContent = "TIME'S UP";
+          chip1.className = "timer-phase-chip done";
+          chip2.className = "timer-phase-chip done";
+          countdown.textContent = "00:00";
+          countdown.className = "timer-digits done";
+        } else {
+          chip1.textContent = "STANDBY";
+          chip2.textContent = "STANDBY";
+          chip1.className = "timer-phase-chip";
+          chip2.className = "timer-phase-chip";
+          countdown.textContent = "--:--";
+          countdown.className = "timer-digits";
+        }
+
+        // Warning Overlay
+        if (isWarning) {
+          overlay.classList.add("active");
+        } else {
+          overlay.classList.remove("active");
+        }
+
+        // Giant Zoom Countdown Number
+        if (
+          isWarning &&
+          remaining !== lastBoomedSecond &&
+          remaining >= 1 &&
+          remaining <= 5
+        ) {
+          lastBoomedSecond = remaining;
+          boom.textContent = remaining;
+          boom.className = "";
+          void boom.offsetWidth; // reflow
+          boom.className = "pop";
+          boom.style.display = "block";
+
+          // Body flash
+          document.body.classList.remove("flash-warn");
+          void document.body.offsetWidth;
+          document.body.classList.add("flash-warn");
+          setTimeout(() => document.body.classList.remove("flash-warn"), 400);
+        }
+
+        if (!isWarning) {
+          boom.style.display = "none";
+          boom.classList.remove("pop");
+        }
+      });
+
+      function loadSharedDisplayState() {
+        try {
+          const raw = localStorage.getItem(DISPLAY_STATE_KEY);
+          if (!raw) return;
+          applyDisplayState(JSON.parse(raw));
+        } catch (err) {
+          console.warn("Could not load shared display state", err);
+        }
+      }
+
+      window.addEventListener("storage", (event) => {
+        if (event.key !== DISPLAY_STATE_KEY || !event.newValue) return;
+        try {
+          applyDisplayState(JSON.parse(event.newValue));
+        } catch (err) {
+          console.warn("Could not apply shared display state", err);
+        }
+      });
+      loadSharedDisplayState();
+
+      setInterval(() => {
+        if (!socket.connected) {
+          try {
+            const raw = localStorage.getItem(DISPLAY_STATE_KEY);
+            if (raw) {
+              const data = JSON.parse(raw);
+              if (data && Object.keys(data).length > 0) {
+                applyDisplayState(data);
+              }
+            }
+          } catch (err) {
+            // Silent fallback
+          }
+        }
+      }, 500);
+    </script>
   </body>
 </html>

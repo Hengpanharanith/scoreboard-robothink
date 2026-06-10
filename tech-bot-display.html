@@ -10,16 +10,18 @@
     />
     <style>
       :root {
-        --bg: #040810;
-        --blue: #00d4ff;
-        --blue-dim: rgba(0, 212, 255, 0.12);
-        --blue-glow: rgba(0, 212, 255, 0.5);
-        --red: #ff2d55;
-        --red-dim: rgba(255, 45, 85, 0.12);
-        --red-glow: rgba(255, 45, 85, 0.5);
-        --gold: #ffd700;
-        --white: #e8f4ff;
-        --dim: #3a5a7a;
+        --bg: #f8faff;
+        --blue: #1565c0;
+        --blue-dim: rgba(21, 101, 192, 0.1);
+        --blue-glow: rgba(21, 101, 192, 0.25);
+        --red: #c62828;
+        --red-dim: rgba(198, 40, 40, 0.1);
+        --red-glow: rgba(198, 40, 40, 0.25);
+        --gold: #e65100;
+        --white: #1a1a2e;
+        --dim: #90a4ae;
+        --panel: #ffffff;
+        --border: #dde3ed;
         --font-head: "Orbitron", monospace;
         --font-mono: "Share Tech Mono", monospace;
       }
@@ -45,37 +47,35 @@
         flex-direction: column;
         font-family: var(--font-mono);
         position: relative;
+        color: var(--white);
 
         background-image:
           radial-gradient(
             ellipse 100% 60% at 50% 110%,
-            rgba(0, 212, 255, 0.04) 0%,
+            rgba(21, 101, 192, 0.05) 0%,
             transparent 70%
           ),
           radial-gradient(
             ellipse 60% 40% at 20% 50%,
-            rgba(0, 212, 255, 0.03) 0%,
+            rgba(21, 101, 192, 0.03) 0%,
             transparent 60%
           ),
           radial-gradient(
             ellipse 60% 40% at 80% 50%,
-            rgba(255, 45, 85, 0.03) 0%,
+            rgba(198, 40, 40, 0.03) 0%,
             transparent 60%
           );
       }
 
-      /* Scanlines */
+      /* Subtle grid pattern */
       body::before {
         content: "";
         position: fixed;
         inset: 0;
-        background: repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 3px,
-          rgba(0, 0, 0, 0.06) 3px,
-          rgba(0, 0, 0, 0.06) 4px
-        );
+        background-image:
+          linear-gradient(rgba(21, 101, 192, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(21, 101, 192, 0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
         pointer-events: none;
         z-index: 100;
       }
@@ -92,28 +92,28 @@
         left: 12px;
         border-top: 2px solid var(--blue);
         border-left: 2px solid var(--blue);
-        box-shadow: -4px -4px 20px var(--blue-glow);
+        box-shadow: -2px -2px 10px var(--blue-glow);
       }
       .corner.tr {
         top: 12px;
         right: 12px;
         border-top: 2px solid var(--red);
         border-right: 2px solid var(--red);
-        box-shadow: 4px -4px 20px var(--red-glow);
+        box-shadow: 2px -2px 10px var(--red-glow);
       }
       .corner.bl {
         bottom: 12px;
         left: 12px;
         border-bottom: 2px solid var(--blue);
         border-left: 2px solid var(--blue);
-        box-shadow: -4px 4px 20px var(--blue-glow);
+        box-shadow: -2px 2px 10px var(--blue-glow);
       }
       .corner.br {
         bottom: 12px;
         right: 12px;
         border-bottom: 2px solid var(--red);
         border-right: 2px solid var(--red);
-        box-shadow: 4px 4px 20px var(--red-glow);
+        box-shadow: 2px 2px 10px var(--red-glow);
       }
 
       /* TOP INFO BAR */
@@ -124,6 +124,9 @@
         flex-direction: column;
         padding: 20px 60px 12px;
         position: relative;
+        background: #ffffff;
+        border-bottom: 2px solid var(--border);
+        box-shadow: 0 2px 12px rgba(21, 101, 192, 0.08);
       }
 
       .comp-name {
@@ -131,9 +134,9 @@
         font-size: clamp(14px, 2.2vw, 26px);
         font-weight: 900;
         letter-spacing: 0.3em;
-        color: var(--white);
+        color: var(--blue);
         text-transform: uppercase;
-        text-shadow: 0 0 20px rgba(232, 244, 255, 0.4);
+        text-shadow: none;
       }
 
       .round-row {
@@ -148,11 +151,11 @@
         font-weight: 700;
         letter-spacing: 0.2em;
         color: var(--gold);
-        border: 1px solid rgba(255, 215, 0, 0.4);
+        border: 1px solid rgba(230, 81, 0, 0.4);
         padding: 3px 12px;
-        background: rgba(255, 215, 0, 0.05);
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+        background: rgba(230, 81, 0, 0.06);
+        text-shadow: none;
+        box-shadow: none;
       }
       .round-num {
         font-size: clamp(9px, 1.2vw, 13px);
@@ -180,29 +183,34 @@
         position: relative;
       }
 
+      .team.blue {
+        background: linear-gradient(160deg, #f0f6ff 0%, #e8f0ff 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(21, 101, 192, 0.15);
+        box-shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+      }
+      .team.red {
+        background: linear-gradient(160deg, #fff0f0 0%, #ffe8e8 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(198, 40, 40, 0.15);
+        box-shadow: 0 4px 24px rgba(198, 40, 40, 0.08);
+      }
+
       .team-logo {
         width: clamp(70px, 10vw, 130px);
         height: clamp(70px, 10vw, 130px);
-        border-radius: 6px;
+        border-radius: 10px;
         object-fit: cover;
-        border: 2px solid;
+        border: 3px solid;
         position: relative;
       }
       .team.blue .team-logo {
         border-color: var(--blue);
-        box-shadow:
-          0 0 20px var(--blue-glow),
-          0 0 60px rgba(0, 212, 255, 0.15),
-          inset 0 0 20px rgba(0, 212, 255, 0.05);
-        filter: drop-shadow(0 0 10px var(--blue));
+        box-shadow: 0 4px 16px var(--blue-glow);
       }
       .team.red .team-logo {
         border-color: var(--red);
-        box-shadow:
-          0 0 20px var(--red-glow),
-          0 0 60px rgba(255, 45, 85, 0.15),
-          inset 0 0 20px rgba(255, 45, 85, 0.05);
-        filter: drop-shadow(0 0 10px var(--red));
+        box-shadow: 0 4px 16px var(--red-glow);
       }
 
       .team-name {
@@ -212,21 +220,16 @@
         letter-spacing: 0.2em;
         text-transform: uppercase;
         text-align: center;
+        text-shadow: none;
       }
       .team.blue .team-name {
         color: var(--blue);
-        text-shadow:
-          0 0 20px var(--blue),
-          0 0 40px var(--blue-glow);
       }
       .team.red .team-name {
         color: var(--red);
-        text-shadow:
-          0 0 20px var(--red),
-          0 0 40px var(--red-glow);
       }
 
-      /* Score glow bars behind score */
+      /* Score card */
       .score-wrap {
         position: relative;
         display: flex;
@@ -236,17 +239,17 @@
       .score-glow-bg {
         position: absolute;
         inset: -20px -30px;
-        border-radius: 8px;
-        opacity: 0.08;
+        border-radius: 12px;
+        opacity: 0.06;
         transition: opacity 0.3s;
       }
       .team.blue .score-glow-bg {
         background: var(--blue);
-        box-shadow: 0 0 60px var(--blue);
+        box-shadow: 0 0 40px var(--blue);
       }
       .team.red .score-glow-bg {
         background: var(--red);
-        box-shadow: 0 0 60px var(--red);
+        box-shadow: 0 0 40px var(--red);
       }
 
       .score {
@@ -263,17 +266,11 @@
       }
       .team.blue .score {
         color: var(--blue);
-        text-shadow:
-          0 0 40px var(--blue),
-          0 0 80px var(--blue-glow),
-          0 0 120px rgba(0, 212, 255, 0.2);
+        text-shadow: 0 2px 12px var(--blue-glow);
       }
       .team.red .score {
         color: var(--red);
-        text-shadow:
-          0 0 40px var(--red),
-          0 0 80px var(--red-glow),
-          0 0 120px rgba(255, 45, 85, 0.2);
+        text-shadow: 0 2px 12px var(--red-glow);
       }
 
       .score.bump {
@@ -309,8 +306,8 @@
         font-size: clamp(14px, 2vw, 24px);
         font-weight: 900;
         letter-spacing: 0.1em;
-        color: rgba(232, 244, 255, 0.15);
-        text-shadow: 0 0 20px rgba(232, 244, 255, 0.1);
+        color: var(--dim);
+        text-shadow: none;
       }
 
       .divider-line {
@@ -319,7 +316,7 @@
         background: linear-gradient(
           180deg,
           transparent,
-          var(--dim),
+          var(--border),
           transparent
         );
       }
@@ -330,29 +327,28 @@
         letter-spacing: 0.2em;
         padding: 4px 10px;
         border: 1px solid;
+        border-radius: 4px;
         text-transform: uppercase;
         transition: all 0.4s;
+        text-shadow: none;
       }
       .leading-badge.blue {
         color: var(--blue);
-        border-color: var(--blue);
+        border-color: rgba(21, 101, 192, 0.4);
         background: var(--blue-dim);
-        box-shadow: 0 0 12px var(--blue-glow);
-        text-shadow: 0 0 8px var(--blue);
+        box-shadow: 0 2px 8px var(--blue-glow);
       }
       .leading-badge.red {
         color: var(--red);
-        border-color: var(--red);
+        border-color: rgba(198, 40, 40, 0.4);
         background: var(--red-dim);
-        box-shadow: 0 0 12px var(--red-glow);
-        text-shadow: 0 0 8px var(--red);
+        box-shadow: 0 2px 8px var(--red-glow);
       }
       .leading-badge.tie {
         color: var(--gold);
-        border-color: var(--gold);
-        background: rgba(255, 215, 0, 0.05);
-        box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
-        text-shadow: 0 0 8px var(--gold);
+        border-color: rgba(230, 81, 0, 0.4);
+        background: rgba(230, 81, 0, 0.06);
+        box-shadow: 0 2px 8px rgba(230, 81, 0, 0.15);
       }
 
       /* BOTTOM BAR */
@@ -362,8 +358,10 @@
         justify-content: center;
         padding: 10px 60px 16px;
         gap: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-top: 2px solid var(--border);
+        background: #ffffff;
         position: relative;
+        box-shadow: 0 -2px 12px rgba(21, 101, 192, 0.06);
       }
       .bottom-bar::before {
         content: "";
@@ -372,11 +370,11 @@
         left: 50%;
         transform: translateX(-50%);
         width: 300px;
-        height: 1px;
+        height: 2px;
         background: linear-gradient(
           90deg,
           transparent,
-          rgba(255, 255, 255, 0.15),
+          var(--blue),
           transparent
         );
       }
@@ -388,15 +386,16 @@
         font-family: var(--font-mono);
       }
       .ticker span {
-        color: rgba(255, 255, 255, 0.25);
+        color: var(--blue);
+        font-weight: 700;
       }
 
       .live-dot {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        background: #22ff88;
-        box-shadow: 0 0 10px #22ff88;
+        background: #00c853;
+        box-shadow: 0 0 8px #00c853;
         animation: livePulse 1.5s ease-in-out infinite;
         flex-shrink: 0;
       }
@@ -415,8 +414,9 @@
       .clock {
         font-family: var(--font-head);
         font-size: clamp(10px, 1.2vw, 14px);
-        color: var(--dim);
+        color: var(--blue);
         letter-spacing: 0.1em;
+        font-weight: 700;
       }
 
       /* horizontal bar at bottom of each team panel */
@@ -425,8 +425,8 @@
         bottom: 0;
         left: 10%;
         right: 10%;
-        height: 2px;
-        border-radius: 1px;
+        height: 3px;
+        border-radius: 2px;
         transition: width 0.5s;
       }
       .team.blue .team-bar {
@@ -436,7 +436,7 @@
           var(--blue),
           transparent
         );
-        box-shadow: 0 0 10px var(--blue);
+        box-shadow: 0 0 6px var(--blue-glow);
       }
       .team.red .team-bar {
         background: linear-gradient(
@@ -445,20 +445,22 @@
           var(--red),
           transparent
         );
-        box-shadow: 0 0 10px var(--red);
+        box-shadow: 0 0 6px var(--red-glow);
       }
 
-      /* Scroll ticker at very top */
+      /* Animated accent strip at very top */
       .ticker-strip {
-        height: 3px;
+        height: 4px;
         background: linear-gradient(
           90deg,
           var(--blue),
+          #42a5f5,
           var(--red),
+          #ef5350,
           var(--blue)
         );
         background-size: 200% 100%;
-        animation: shiftGrad 4s linear infinite;
+        animation: shiftGrad 5s linear infinite;
       }
       @keyframes shiftGrad {
         0% {
@@ -467,6 +469,256 @@
         100% {
           background-position: 200% 0%;
         }
+      }
+
+      /* ===== TIMER BAR (top center between teams) ===== */
+      .timer-bar-top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 8px 60px;
+        background: #ffffff;
+        border-bottom: 2px solid var(--border);
+        position: relative;
+        box-shadow: 0 2px 10px rgba(21, 101, 192, 0.07);
+        z-index: 10;
+      }
+
+      /* Blue side accent */
+      .timer-bar-top::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--blue);
+      }
+      /* Red side accent */
+      .timer-bar-top::after {
+        content: '';
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--red);
+      }
+
+      .timer-phase-chip {
+        font-family: var(--font-head);
+        font-size: clamp(8px, 1vw, 11px);
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        padding: 3px 12px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border);
+        color: var(--dim);
+        background: #f0f4fc;
+        transition: all 0.3s;
+        white-space: nowrap;
+      }
+      .timer-phase-chip.prep {
+        color: var(--gold);
+        border-color: rgba(230,81,0,0.45);
+        background: rgba(230,81,0,0.07);
+      }
+      .timer-phase-chip.play {
+        color: var(--blue);
+        border-color: rgba(21,101,192,0.45);
+        background: rgba(21,101,192,0.07);
+      }
+      .timer-phase-chip.done {
+        color: var(--red);
+        border-color: rgba(198,40,40,0.4);
+        background: rgba(198,40,40,0.06);
+      }
+      .timer-phase-chip.warning {
+        color: var(--red);
+        border-color: var(--red);
+        background: rgba(198,40,40,0.1);
+        animation: chipWarn 0.5s ease-in-out infinite;
+      }
+      @keyframes chipWarn {
+        0%,100% { opacity:1; }
+        50% { opacity:0.5; }
+      }
+
+      .timer-digits {
+        font-family: var(--font-head);
+        font-size: clamp(26px, 4.5vw, 56px);
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        color: var(--dim);
+        transition: color 0.3s, text-shadow 0.3s;
+      }
+      .timer-digits.prep-active {
+        color: var(--gold);
+        text-shadow: 0 2px 12px rgba(230,81,0,0.25);
+      }
+      .timer-digits.play-active {
+        color: var(--blue);
+        text-shadow: 0 2px 12px rgba(21,101,192,0.25);
+      }
+      .timer-digits.warning {
+        color: var(--red) !important;
+        text-shadow: 0 0 20px rgba(198,40,40,0.4) !important;
+        animation: digitsWarn 0.5s ease-in-out infinite;
+      }
+      .timer-digits.done {
+        color: var(--red);
+        opacity: 0.55;
+      }
+      @keyframes digitsWarn {
+        0%,100% { opacity:1; transform:scale(1); }
+        50% { opacity:0.5; transform:scale(0.97); }
+      }
+
+      .timer-sep {
+        width: 1px;
+        height: 28px;
+        background: var(--border);
+        opacity: 0.6;
+      }
+
+      /* ===== LAST 5 SECONDS WARNING OVERLAY ===== */
+      #warningOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 200;
+        border: 6px solid transparent;
+      }
+      #warningOverlay.active {
+        display: block;
+        border-color: var(--red);
+        animation: borderFlash 0.5s ease-in-out infinite;
+        box-shadow:
+          inset 0 0 60px rgba(198, 40, 40, 0.15),
+          0 0 40px rgba(198, 40, 40, 0.2);
+      }
+      @keyframes borderFlash {
+        0%,
+        100% {
+          border-color: var(--red);
+          box-shadow:
+            inset 0 0 60px rgba(198, 40, 40, 0.15),
+            0 0 40px rgba(198, 40, 40, 0.2);
+        }
+        50% {
+          border-color: transparent;
+          box-shadow: none;
+        }
+      }
+      #countdownBoom {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-head);
+        font-size: clamp(100px, 20vw, 220px);
+        font-weight: 900;
+        color: var(--red);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 300;
+        text-shadow: 0 0 40px rgba(198, 40, 40, 0.5);
+      }
+      #countdownBoom.pop {
+        display: block;
+        animation: boomPop 1s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+      }
+      @keyframes boomPop {
+        0% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
+        40% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(1.8);
+        }
+      }
+      body.flash-warn {
+        animation: bodyFlash 0.4s ease-in-out;
+      }
+      @keyframes bodyFlash {
+        0%,
+        100% {
+          background-color: var(--bg);
+        }
+        50% {
+          background-color: rgba(198, 40, 40, 0.08);
+        }
+      }
+
+      /* Robot SVG styles */
+      .robot-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .robot-svg-wrap {
+        animation: robotFloat 3s ease-in-out infinite;
+        filter: drop-shadow(0 4px 12px rgba(21, 101, 192, 0.18));
+      }
+      @keyframes robotFloat {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+      .track-dash {
+        width: 2px;
+        height: 30px;
+        background: repeating-linear-gradient(
+          180deg,
+          var(--dim) 0px,
+          var(--dim) 8px,
+          transparent 8px,
+          transparent 14px
+        );
+        opacity: 0.4;
+      }
+      .sensor-pulse {
+        animation: sensorBlink 1.2s ease-in-out infinite;
+      }
+      .sensor-pulse:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .sensor-pulse:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes sensorBlink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      /* Robot icons in top bar */
+      .top-robot-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.18;
+      }
+      .top-robot-icon.left {
+        left: 70px;
+      }
+      .top-robot-icon.right {
+        right: 70px;
+        transform: translateY(-50%) scaleX(-1);
       }
     </style>
   </head>
@@ -479,11 +731,100 @@
     <div class="corner br"></div>
 
     <div class="top-bar">
+      <!-- Decorative robot icons left & right -->
+      <svg
+        class="top-robot-icon left"
+        width="52"
+        height="52"
+        viewBox="0 0 52 52"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect x="10" y="8" width="32" height="28" rx="4" fill="#1565c0" />
+        <rect x="6" y="14" width="6" height="16" rx="2" fill="#1565c0" />
+        <rect x="40" y="14" width="6" height="16" rx="2" fill="#1565c0" />
+        <rect x="14" y="36" width="8" height="6" rx="2" fill="#1565c0" />
+        <rect x="30" y="36" width="8" height="6" rx="2" fill="#1565c0" />
+        <rect
+          x="16"
+          y="12"
+          width="20"
+          height="12"
+          rx="2"
+          fill="#ffffff"
+          opacity="0.2"
+        />
+        <circle cx="20" cy="18" r="3" fill="#00c853" />
+        <circle cx="32" cy="18" r="3" fill="#00c853" />
+        <circle cx="26" cy="22" r="2" fill="#ffffff" opacity="0.5" />
+        <rect x="13" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <rect x="19" y="42" width="4" height="3" rx="1" fill="#ff5722" />
+        <rect x="25" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <rect x="31" y="42" width="4" height="3" rx="1" fill="#ff5722" />
+        <rect x="37" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <line
+          x1="26"
+          y1="45"
+          x2="26"
+          y2="52"
+          stroke="#1565c0"
+          stroke-width="3"
+        />
+      </svg>
+      <svg
+        class="top-robot-icon right"
+        width="52"
+        height="52"
+        viewBox="0 0 52 52"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect x="10" y="8" width="32" height="28" rx="4" fill="#c62828" />
+        <rect x="6" y="14" width="6" height="16" rx="2" fill="#c62828" />
+        <rect x="40" y="14" width="6" height="16" rx="2" fill="#c62828" />
+        <rect x="14" y="36" width="8" height="6" rx="2" fill="#c62828" />
+        <rect x="30" y="36" width="8" height="6" rx="2" fill="#c62828" />
+        <rect
+          x="16"
+          y="12"
+          width="20"
+          height="12"
+          rx="2"
+          fill="#ffffff"
+          opacity="0.2"
+        />
+        <circle cx="20" cy="18" r="3" fill="#00c853" />
+        <circle cx="32" cy="18" r="3" fill="#00c853" />
+        <circle cx="26" cy="22" r="2" fill="#ffffff" opacity="0.5" />
+        <rect x="13" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <rect x="19" y="42" width="4" height="3" rx="1" fill="#ff5722" />
+        <rect x="25" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <rect x="31" y="42" width="4" height="3" rx="1" fill="#ff5722" />
+        <rect x="37" y="42" width="4" height="3" rx="1" fill="#90a4ae" />
+        <line
+          x1="26"
+          y1="45"
+          x2="26"
+          y2="52"
+          stroke="#c62828"
+          stroke-width="3"
+        />
+      </svg>
+
       <div class="comp-name" id="dispCompName">FOLLOW LINE ROBOT CUP</div>
       <div class="round-row">
         <div class="round-chip" id="dispRoundLabel">QUALIFICATION</div>
         <div class="round-num" id="dispRoundNum">ROUND · 1</div>
       </div>
+    </div>
+
+    <!-- ===== TIMER BAR (top center between teams) ===== -->
+    <div class="timer-bar-top" id="timerBarTop">
+      <div class="timer-phase-chip" id="timerPhaseChip">STANDBY</div>
+      <div class="timer-sep"></div>
+      <div class="timer-digits" id="timerCountdown">--:--</div>
+      <div class="timer-sep"></div>
+      <div class="timer-phase-chip" id="timerPhaseChip2">STANDBY</div>
     </div>
 
     <div class="scoreboard">
@@ -509,10 +850,376 @@
 
       <!-- MIDDLE -->
       <div class="middle">
-        <div class="divider-line"></div>
-        <div class="vs-label">VS</div>
-        <div class="leading-badge tie" id="leadBadge">TIED</div>
-        <div class="divider-line"></div>
+        <div class="track-dash"></div>
+
+        <!-- Follow Line Robot SVG (top view) -->
+        <div class="robot-center">
+          <div class="robot-svg-wrap">
+            <svg
+              width="90"
+              height="110"
+              viewBox="0 0 90 110"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Left wheel -->
+              <rect x="2" y="22" width="12" height="32" rx="5" fill="#455a64" />
+              <rect
+                x="4"
+                y="26"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="4"
+                y="32"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="4"
+                y="38"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="4"
+                y="44"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <!-- Right wheel -->
+              <rect
+                x="76"
+                y="22"
+                width="12"
+                height="32"
+                rx="5"
+                fill="#455a64"
+              />
+              <rect
+                x="78"
+                y="26"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="78"
+                y="32"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="78"
+                y="38"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <rect
+                x="78"
+                y="44"
+                width="8"
+                height="4"
+                rx="1"
+                fill="#78909c"
+                opacity="0.5"
+              />
+              <!-- Main chassis -->
+              <rect
+                x="14"
+                y="12"
+                width="62"
+                height="56"
+                rx="8"
+                fill="#e3eaf5"
+              />
+              <rect
+                x="14"
+                y="12"
+                width="62"
+                height="56"
+                rx="8"
+                stroke="#90a4ae"
+                stroke-width="1.5"
+              />
+              <!-- PCB board surface -->
+              <rect
+                x="18"
+                y="16"
+                width="54"
+                height="48"
+                rx="5"
+                fill="#d0dce8"
+              />
+              <!-- Circuit traces -->
+              <line
+                x1="25"
+                y1="28"
+                x2="25"
+                y2="52"
+                stroke="#90a4ae"
+                stroke-width="0.8"
+                stroke-dasharray="3 2"
+              />
+              <line
+                x1="65"
+                y1="28"
+                x2="65"
+                y2="52"
+                stroke="#90a4ae"
+                stroke-width="0.8"
+                stroke-dasharray="3 2"
+              />
+              <line
+                x1="25"
+                y1="40"
+                x2="65"
+                y2="40"
+                stroke="#90a4ae"
+                stroke-width="0.8"
+                stroke-dasharray="3 2"
+              />
+              <!-- CPU chip -->
+              <rect
+                x="33"
+                y="26"
+                width="24"
+                height="18"
+                rx="3"
+                fill="#263238"
+              />
+              <rect
+                x="35"
+                y="28"
+                width="20"
+                height="14"
+                rx="2"
+                fill="#37474f"
+              />
+              <text
+                x="45"
+                y="38"
+                text-anchor="middle"
+                fill="#4dd0e1"
+                font-size="5"
+                font-family="monospace"
+                font-weight="bold"
+              >
+                MCU
+              </text>
+              <!-- Chip pins left -->
+              <rect
+                x="29"
+                y="29"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <rect
+                x="29"
+                y="33"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <rect
+                x="29"
+                y="37"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <!-- Chip pins right -->
+              <rect
+                x="57"
+                y="29"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <rect
+                x="57"
+                y="33"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <rect
+                x="57"
+                y="37"
+                width="4"
+                height="2"
+                rx="0.5"
+                fill="#b0bec5"
+              />
+              <!-- Battery -->
+              <rect
+                x="22"
+                y="50"
+                width="20"
+                height="10"
+                rx="2"
+                fill="#4caf50"
+                opacity="0.85"
+              />
+              <rect x="42" y="53" width="2" height="4" rx="1" fill="#388e3c" />
+              <text
+                x="32"
+                y="58"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="5"
+                font-family="monospace"
+              >
+                BAT
+              </text>
+              <!-- Motor driver -->
+              <rect
+                x="48"
+                y="50"
+                width="18"
+                height="10"
+                rx="2"
+                fill="#1565c0"
+                opacity="0.85"
+              />
+              <text
+                x="57"
+                y="58"
+                text-anchor="middle"
+                fill="#fff"
+                font-size="4.5"
+                font-family="monospace"
+              >
+                DRV
+              </text>
+              <!-- Status LEDs -->
+              <circle
+                class="sensor-pulse"
+                cx="26"
+                cy="22"
+                r="3"
+                fill="#00c853"
+              />
+              <circle
+                class="sensor-pulse"
+                cx="45"
+                cy="22"
+                r="3"
+                fill="#00c853"
+              />
+              <circle
+                class="sensor-pulse"
+                cx="64"
+                cy="22"
+                r="3"
+                fill="#00c853"
+              />
+              <!-- Sensor bar housing -->
+              <rect
+                x="18"
+                y="68"
+                width="54"
+                height="14"
+                rx="4"
+                fill="#263238"
+              />
+              <rect
+                x="20"
+                y="70"
+                width="50"
+                height="10"
+                rx="3"
+                fill="#37474f"
+              />
+              <!-- IR Sensors (5 sensors) -->
+              <circle cx="27" cy="75" r="3.5" fill="#ff5722" opacity="0.9" />
+              <circle cx="35" cy="75" r="3.5" fill="#ff5722" opacity="0.9" />
+              <circle cx="45" cy="75" r="4" fill="#ff1744" />
+              <circle cx="55" cy="75" r="3.5" fill="#ff5722" opacity="0.9" />
+              <circle cx="63" cy="75" r="3.5" fill="#ff5722" opacity="0.9" />
+              <!-- IR sensor glow (center active) -->
+              <circle cx="45" cy="75" r="2" fill="#ffffff" opacity="0.8" />
+              <!-- Sensor connector wires -->
+              <line
+                x1="27"
+                y1="71"
+                x2="27"
+                y2="62"
+                stroke="#ff5722"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <line
+                x1="35"
+                y1="71"
+                x2="35"
+                y2="62"
+                stroke="#ff5722"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <line
+                x1="45"
+                y1="71"
+                x2="45"
+                y2="60"
+                stroke="#ff1744"
+                stroke-width="1"
+                opacity="0.7"
+              />
+              <line
+                x1="55"
+                y1="71"
+                x2="55"
+                y2="62"
+                stroke="#ff5722"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <line
+                x1="63"
+                y1="71"
+                x2="63"
+                y2="62"
+                stroke="#ff5722"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <!-- The black line on the track -->
+              <rect x="42" y="82" width="6" height="28" rx="3" fill="#263238" />
+            </svg>
+          </div>
+          <div class="leading-badge tie" id="leadBadge">TIED</div>
+        </div>
+
+        <div class="track-dash"></div>
       </div>
 
       <!-- RED -->
@@ -544,17 +1251,141 @@
       <div class="clock" id="clock">00:00:00</div>
     </div>
 
+    <!-- Warning overlay for last 5 seconds -->
+    <div id="warningOverlay"></div>
+    <!-- Countdown number boom -->
+    <div id="countdownBoom"></div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-      const STATE_KEY = "flr_scoreboard";
+      const SERVER_URL =
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        ":" +
+        (window.location.port || "8888");
+      const socket = io(SERVER_URL);
+
+      let currentState = {
+        blueScore: 0,
+        redScore: 0,
+        blueName: "BLUE TEAM",
+        redName: "RED TEAM",
+        blueImg: "",
+        redImg: "",
+        compName: "FOLLOW LINE ROBOT CUP",
+        roundNum: 1,
+        roundLabel: "QUALIFICATION",
+      };
+
       let prevState = {};
 
-      function readState() {
-        try {
-          return JSON.parse(localStorage.getItem(STATE_KEY)) || {};
-        } catch {
-          return {};
+      socket.on("connect", () => {
+        console.log("Display connected to server");
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Display disconnected from server");
+      });
+
+      socket.on("scoreboard-state", (data) => {
+        if (!data) return;
+
+        // Update blue score
+        if (
+          data.blueScore !== undefined &&
+          data.blueScore !== currentState.blueScore
+        ) {
+          currentState.blueScore = data.blueScore;
+          const el = document.getElementById("dispBlueScore");
+          el.textContent = data.blueScore;
+          bumpEl(el);
         }
-      }
+
+        // Update red score
+        if (
+          data.redScore !== undefined &&
+          data.redScore !== currentState.redScore
+        ) {
+          currentState.redScore = data.redScore;
+          const el = document.getElementById("dispRedScore");
+          el.textContent = data.redScore;
+          bumpEl(el);
+        }
+
+        // Update blue name
+        if (
+          data.blueName !== undefined &&
+          data.blueName !== currentState.blueName
+        ) {
+          currentState.blueName = data.blueName;
+          document.getElementById("dispBlueName").textContent =
+            data.blueName || "BLUE TEAM";
+        }
+
+        // Update red name
+        if (
+          data.redName !== undefined &&
+          data.redName !== currentState.redName
+        ) {
+          currentState.redName = data.redName;
+          document.getElementById("dispRedName").textContent =
+            data.redName || "RED TEAM";
+        }
+
+        // Update blue image
+        if (
+          data.blueImg !== undefined &&
+          data.blueImg !== currentState.blueImg
+        ) {
+          currentState.blueImg = data.blueImg;
+          if (data.blueImg)
+            document.getElementById("dispBlueImg").src = data.blueImg;
+        }
+
+        // Update red image
+        if (data.redImg !== undefined && data.redImg !== currentState.redImg) {
+          currentState.redImg = data.redImg;
+          if (data.redImg)
+            document.getElementById("dispRedImg").src = data.redImg;
+        }
+
+        // Update competition name
+        if (
+          data.compName !== undefined &&
+          data.compName !== currentState.compName
+        ) {
+          currentState.compName = data.compName;
+          document.getElementById("dispCompName").textContent =
+            data.compName || "FOLLOW LINE ROBOT CUP";
+          document.getElementById("dispCompTicker").textContent =
+            data.compName || "FOLLOW LINE ROBOT CUP";
+        }
+
+        // Update round number
+        if (
+          data.roundNum !== undefined &&
+          data.roundNum !== currentState.roundNum
+        ) {
+          currentState.roundNum = data.roundNum;
+          document.getElementById("dispRoundNum").textContent =
+            "ROUND · " + (data.roundNum || "1");
+        }
+
+        // Update round label
+        if (
+          data.roundLabel !== undefined &&
+          data.roundLabel !== currentState.roundLabel
+        ) {
+          currentState.roundLabel = data.roundLabel;
+          document.getElementById("dispRoundLabel").textContent = (
+            data.roundLabel || "QUALIFICATION"
+          ).toUpperCase();
+        }
+
+        // Update leading badge
+        updateLeadingBadge();
+      });
 
       function bumpEl(el) {
         el.classList.remove("bump");
@@ -563,62 +1394,21 @@
         setTimeout(() => el.classList.remove("bump"), 300);
       }
 
-      function update() {
-        const s = readState();
-        if (!s.blueScore && s.blueScore !== 0) return;
-
-        const blueScoreEl = document.getElementById("dispBlueScore");
-        const redScoreEl = document.getElementById("dispRedScore");
-
-        if (s.blueScore !== prevState.blueScore) {
-          blueScoreEl.textContent = s.blueScore;
-          bumpEl(blueScoreEl);
-        }
-        if (s.redScore !== prevState.redScore) {
-          redScoreEl.textContent = s.redScore;
-          bumpEl(redScoreEl);
-        }
-
-        if (s.blueName !== prevState.blueName)
-          document.getElementById("dispBlueName").textContent =
-            s.blueName || "BLUE TEAM";
-        if (s.redName !== prevState.redName)
-          document.getElementById("dispRedName").textContent =
-            s.redName || "RED TEAM";
-        if (s.blueImg !== prevState.blueImg && s.blueImg)
-          document.getElementById("dispBlueImg").src = s.blueImg;
-        if (s.redImg !== prevState.redImg && s.redImg)
-          document.getElementById("dispRedImg").src = s.redImg;
-
-        const cn = s.compName || "FOLLOW LINE ROBOT CUP";
-        if (s.compName !== prevState.compName) {
-          document.getElementById("dispCompName").textContent = cn;
-          document.getElementById("dispCompTicker").textContent = cn;
-        }
-        if (s.roundNum !== prevState.roundNum)
-          document.getElementById("dispRoundNum").textContent =
-            "ROUND · " + (s.roundNum || "1");
-        if (s.roundLabel !== prevState.roundLabel)
-          document.getElementById("dispRoundLabel").textContent = (
-            s.roundLabel || "QUALIFICATION"
-          ).toUpperCase();
-
-        // Leading badge
+      function updateLeadingBadge() {
         const badge = document.getElementById("leadBadge");
-        const bs = parseInt(s.blueScore) || 0;
-        const rs = parseInt(s.redScore) || 0;
+        const bs = parseInt(currentState.blueScore) || 0;
+        const rs = parseInt(currentState.redScore) || 0;
+
         if (bs > rs) {
-          badge.textContent = (s.blueName || "BLUE") + " LEADS";
+          badge.textContent = (currentState.blueName || "BLUE") + " LEADS";
           badge.className = "leading-badge blue";
         } else if (rs > bs) {
-          badge.textContent = (s.redName || "RED") + " LEADS";
+          badge.textContent = (currentState.redName || "RED") + " LEADS";
           badge.className = "leading-badge red";
         } else {
           badge.textContent = "TIED";
           badge.className = "leading-badge tie";
         }
-
-        prevState = { ...s };
       }
 
       // Clock
@@ -630,10 +1420,109 @@
         document.getElementById("clock").textContent = h + ":" + m + ":" + sec;
       }
 
-      setInterval(update, 400);
       setInterval(updateClock, 1000);
-      update();
       updateClock();
+      updateLeadingBadge();
+
+      // ===== TIMER DISPLAY LOGIC =====
+      function formatMMSS(sec) {
+        const s = Math.max(0, sec);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      let lastBoomedSecond = -1;
+
+      socket.on("timer-state", (state) => {
+        if (!state) return;
+
+        const countdown = document.getElementById("timerCountdown");
+        const chip1 = document.getElementById("timerPhaseChip");
+        const chip2 = document.getElementById("timerPhaseChip2");
+        const overlay = document.getElementById("warningOverlay");
+        const boom = document.getElementById("countdownBoom");
+
+        const isRunning = state.running;
+        const phase = state.phase;
+        const remaining = state.remaining;
+        const isWarning =
+          isRunning &&
+          remaining <= 5 &&
+          remaining > 0 &&
+          (phase === "prep" || phase === "play");
+        const isDone = phase === "done";
+
+        // --- Timer bar top (new) ---
+        if (phase === "prep" && (isRunning || remaining > 0)) {
+          const cls = "timer-phase-chip prep" + (isWarning ? " warning" : "");
+          const digCls = "timer-digits prep-active" + (isWarning ? " warning" : "");
+          chip1.textContent = isWarning ? "⚠ LAST " + remaining + "s" : "PREPARATION";
+          chip2.textContent = isWarning ? "⚠ LAST " + remaining + "s" : "PREPARATION";
+          chip1.className = cls;
+          chip2.className = cls;
+          countdown.textContent = formatMMSS(remaining);
+          countdown.className = digCls;
+        } else if (phase === "play" && (isRunning || remaining > 0)) {
+          const cls = "timer-phase-chip play" + (isWarning ? " warning" : "");
+          const digCls = "timer-digits play-active" + (isWarning ? " warning" : "");
+          chip1.textContent = isWarning ? "⚠ LAST " + remaining + "s" : "PLAY TIME";
+          chip2.textContent = isWarning ? "⚠ LAST " + remaining + "s" : "PLAY TIME";
+          chip1.className = cls;
+          chip2.className = cls;
+          countdown.textContent = formatMMSS(remaining);
+          countdown.className = digCls;
+        } else if (isDone) {
+          chip1.textContent = "TIME'S UP";
+          chip2.textContent = "TIME'S UP";
+          chip1.className = "timer-phase-chip done";
+          chip2.className = "timer-phase-chip done";
+          countdown.textContent = "00:00";
+          countdown.className = "timer-digits done";
+        } else {
+          chip1.textContent = "STANDBY";
+          chip2.textContent = "STANDBY";
+          chip1.className = "timer-phase-chip";
+          chip2.className = "timer-phase-chip";
+          countdown.textContent = "--:--";
+          countdown.className = "timer-digits";
+        }
+
+        // --- Last 5 seconds: overlay border flash ---
+        if (isWarning) {
+          overlay.classList.add("active");
+        } else {
+          overlay.classList.remove("active");
+        }
+
+        // --- Last 5 seconds: big countdown number pop ---
+        if (
+          isWarning &&
+          remaining !== lastBoomedSecond &&
+          remaining >= 1 &&
+          remaining <= 5
+        ) {
+          lastBoomedSecond = remaining;
+          boom.textContent = remaining;
+          boom.className = "";
+          void boom.offsetWidth; // reflow
+          boom.className = "pop";
+          boom.style.display = "block";
+
+          // Body flash
+          document.body.classList.remove("flash-warn");
+          void document.body.offsetWidth;
+          document.body.classList.add("flash-warn");
+          setTimeout(() => document.body.classList.remove("flash-warn"), 400);
+        }
+
+        // Clear boom when no longer warning
+        if (!isWarning) {
+          lastBoomedSecond = -1;
+          boom.className = "";
+          boom.style.display = "none";
+        }
+      });
     </script>
   </body>
 </html>

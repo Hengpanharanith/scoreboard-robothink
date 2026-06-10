@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blue Controller - Scoreboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      :root {
+        --bg: #050a0f;
+        --panel: #0a1520;
+        --border: #1a2f45;
+        --blue: #00d4ff;
+        --blue-dim: #003d55;
+        --blue-glow: rgba(0, 212, 255, 0.35);
+        --gold: #ffd700;
+        --text: #e0f0ff;
+        --text-dim: #5a7a9a;
+        --font-head: "Orbitron", monospace;
+        --font-mono: "Share Tech Mono", monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-mono);
+        min-height: 100vh;
+        overflow-x: hidden;
+        background-image:
+          radial-gradient(
+            ellipse 80% 50% at 50% -20%,
+            rgba(0, 212, 255, 0.06) 0%,
+            transparent 70%
+          ),
+          linear-gradient(180deg, #050a0f 0%, #030609 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.08) 3px,
+          rgba(0, 0, 0, 0.08) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      .header {
+        text-align: center;
+        padding: 24px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+      .header::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--blue),
+          transparent
+        );
+        box-shadow: 0 0 12px var(--blue);
+      }
+
+      .header-title {
+        font-family: var(--font-head);
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 0.25em;
+        color: var(--blue);
+        text-shadow:
+          0 0 20px var(--blue),
+          0 0 40px var(--blue-glow);
+        text-transform: uppercase;
+      }
+      .header-sub {
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.15em;
+        margin-top: 4px;
+      }
+
+      .status-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blue);
+        box-shadow: 0 0 8px var(--blue);
+        animation: pulse 2s ease-in-out infinite;
+        margin-right: 6px;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      .team-panel {
+        padding: 20px;
+        border: 1px solid var(--border);
+        position: relative;
+        border-radius: 4px;
+      }
+
+      .team-panel.blue::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--blue),
+          transparent
+        );
+        box-shadow: 0 0 14px var(--blue);
+        border-radius: 4px 4px 0 0;
+      }
+
+      .team-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .team-avatar-wrap {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .team-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 4px;
+        object-fit: cover;
+        border: 2px solid var(--blue-dim);
+        transition: border-color 0.2s;
+        background: var(--panel);
+        display: block;
+      }
+      .team-avatar-wrap:hover .team-avatar {
+        border-color: var(--blue);
+        box-shadow: 0 0 10px var(--blue-glow);
+      }
+      .avatar-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s;
+        border-radius: 4px;
+      }
+      .team-avatar-wrap:hover .avatar-overlay {
+        opacity: 1;
+      }
+      input[type="file"] {
+        display: none;
+      }
+
+      .team-name-input {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        color: var(--blue);
+        font-family: var(--font-head);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        padding: 4px 0;
+        outline: none;
+        width: 100%;
+        text-transform: uppercase;
+        text-shadow: 0 0 12px var(--blue-glow);
+        transition: border-color 0.2s;
+      }
+      .team-name-input:focus {
+        border-color: var(--blue);
+        box-shadow: 0 2px 0 var(--blue);
+      }
+
+      .score-display {
+        text-align: center;
+        margin: 20px 0;
+        font-family: var(--font-head);
+        font-size: 72px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--blue);
+        text-shadow:
+          0 0 30px var(--blue),
+          0 0 60px var(--blue-glow);
+        transition: text-shadow 0.15s;
+      }
+
+      .score-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .score-btn {
+        position: relative;
+        padding: 12px 8px;
+        font-family: var(--font-head);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.12s;
+        overflow: hidden;
+      }
+      .score-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.12s;
+        background: var(--blue-dim);
+      }
+      .score-btn:active {
+        transform: scale(0.95);
+      }
+
+      .score-btn.add {
+        color: var(--blue);
+        border-color: var(--blue-dim);
+        text-shadow: 0 0 8px var(--blue-glow);
+      }
+      .score-btn.add:hover {
+        border-color: var(--blue);
+        box-shadow:
+          0 0 14px var(--blue-glow),
+          inset 0 0 10px rgba(0, 212, 255, 0.08);
+      }
+      .score-btn.add:hover::before {
+        opacity: 1;
+      }
+
+      .score-btn.sub {
+        color: #557799;
+        border-color: #1a2f45;
+      }
+      .score-btn.sub:hover {
+        color: var(--blue);
+        border-color: var(--blue-dim);
+      }
+
+      .btn-label {
+        position: relative;
+        z-index: 1;
+      }
+
+      .footer-bar {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        font-family: var(--font-head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        padding: 9px 18px;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.15s;
+      }
+
+      .btn-reset {
+        color: #ff6b35;
+        border-color: rgba(255, 107, 53, 0.4);
+      }
+      .btn-reset:hover {
+        background: rgba(255, 107, 53, 0.08);
+        box-shadow: 0 0 14px rgba(255, 107, 53, 0.3);
+        border-color: #ff6b35;
+      }
+
+      .status-text {
+        font-size: 10px;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
+
+      .score-bump {
+        animation: bump 0.2s ease-out;
+      }
+      @keyframes bump {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .live-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+      }
+      .live-status.connected {
+        color: #22ff88;
+      }
+      .live-status.connected .status-dot {
+        background: #22ff88;
+        box-shadow: 0 0 8px #22ff88;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-title">⬡ BLUE CONTROLLER ⬡</div>
+      <div class="header-sub">
+        <span class="status-dot"></span>BLUE TEAM OPERATOR PANEL
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="team-panel blue">
+        <div class="team-header">
+          <div
+            class="team-avatar-wrap"
+            onclick="document.getElementById('blueImgInput').click()"
+          >
+            <img class="team-avatar" id="blueAvatar" src="" alt="Blue Team" />
+            <div class="avatar-overlay">CHANGE</div>
+            <input
+              type="file"
+              id="blueImgInput"
+              accept="image/*"
+              onchange="handleImg(this)"
+            />
+          </div>
+          <input
+            class="team-name-input"
+            id="blueName"
+            type="text"
+            placeholder="BLUE TEAM"
+            maxlength="20"
+          />
+        </div>
+        <div class="score-display" id="blueScore">0</div>
+        <div class="score-buttons">
+          <button class="score-btn add" onclick="adjustScore(1)">
+            <span class="btn-label">+1</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(2)">
+            <span class="btn-label">+2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(4)">
+            <span class="btn-label">+4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-1)">
+            <span class="btn-label">−1</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-2)">
+            <span class="btn-label">−2</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-4)">
+            <span class="btn-label">−4</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div class="live-status" id="liveStatus">
+        <span class="status-dot"></span>
+        <span>CONNECTING...</span>
+      </div>
+    </div>
+
+    <script>
+      // Get server host from current location
+      const SERVER_URL =
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        ":" +
+        (window.location.port || "8888");
+      const socket = io(SERVER_URL, {
+        reconnection: true,
+        reconnectionDelay: 100,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+      });
+
+      let currentState = {
+        blueScore: 0,
+        blueName: "BLUE TEAM",
+        blueImg: "",
+      };
+
+      socket.on("connect", () => {
+        console.log("Connected to server");
+        updateStatus(true);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+        updateStatus(false);
+      });
+
+      socket.on("scoreboard-state", (data) => {
+        if (
+          data.blueScore !== undefined &&
+          data.blueScore !== currentState.blueScore
+        ) {
+          currentState.blueScore = data.blueScore;
+          document.getElementById("blueScore").textContent = data.blueScore;
+          const el = document.getElementById("blueScore");
+          el.classList.remove("score-bump");
+          void el.offsetWidth;
+          el.classList.add("score-bump");
+        }
+
+        if (
+          data.blueName !== undefined &&
+          data.blueName !== currentState.blueName
+        ) {
+          currentState.blueName = data.blueName;
+          document.getElementById("blueName").value = data.blueName;
+        }
+
+        if (
+          data.blueImg !== undefined &&
+          data.blueImg !== currentState.blueImg
+        ) {
+          currentState.blueImg = data.blueImg;
+          document.getElementById("blueAvatar").src = data.blueImg;
+        }
+      });
+
+      function updateStatus(connected) {
+        const el = document.getElementById("liveStatus");
+        if (connected) {
+          el.classList.add("connected");
+          el.innerHTML =
+            '<span class="status-dot"></span><span>LIVE · CONNECTED</span>';
+        } else {
+          el.classList.remove("connected");
+          el.innerHTML = '<span class="status-dot"></span><span>OFFLINE</span>';
+        }
+      }
+
+      function adjustScore(delta) {
+        socket.emit("score-change", { team: "blue", delta });
+      }
+
+      function resetScore() {
+        if (!confirm("Reset blue team score?")) return;
+        socket.emit("score-change", {
+          team: "blue",
+          delta: -currentState.blueScore,
+        });
+      }
+
+      function handleImg(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imgData = e.target.result;
+          document.getElementById("blueAvatar").src = imgData;
+          socket.emit("team-update", {
+            team: "blue",
+            field: "image",
+            value: imgData,
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      document.getElementById("blueName").addEventListener("input", (e) => {
+        socket.emit("team-update", {
+          team: "blue",
+          field: "name",
+          value: e.target.value,
+        });
+      });
+    </script>
+  </body>
+</html>
