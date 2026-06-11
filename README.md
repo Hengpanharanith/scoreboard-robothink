@@ -53,21 +53,18 @@ When the operator changes something in the browser, the update is sent to `serve
 
 If your Arduino uses a different COM port, update `SERIAL_PATH` in `server.js`.
 
-## Folder overview
-
-```text
-server.js
-package.json
-index.html
-config.html
-display.html
-push_button/
-sponsor_logo/
-README.md
-```
 ## How to use it With OBS 
-1. After run the project 
-2. Create Browser source in OBS 
-3. Input the URL (Your ipv4/display.html) Ex: http://172.20.10.2:8888/display.html
-4. Control page url is (Your ipv4:8888) EX: http://172.20.10.2:8080/ (Can use it on phone or other Device browser)
+#Techbot 
+  1. Visit index.html after running the project
+  2. Click Techbot Butoon on the top right
+  3. After you see the Controller of Techbot please open the display of techbot
+  4. Replace the localhost to your ipv4 for OBS Browser source
+  5. For red Team controller : YOURIPV4:8888/red-techbot.html
+  6. For blue Team controller :  YOURIPV4:8888/blue-techbot.html
+#Robothink 
+  1. After run the project 
+  2. Create Browser source in OBS 
+  3. Input the URL (Your ipv4:8888/display.html) Ex: http://172.20.10.2:8888/display.html
+  4. Control page url is (Your ipv4:8888) EX: http://172.20.10.2:8080/ (Can use it on phone or other Device browser)
+
 Note : All device need the same Network
