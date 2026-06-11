@@ -53,7 +53,7 @@ When the operator changes something in the browser, the update is sent to `serve
 
 If your Arduino uses a different COM port, update `SERIAL_PATH` in `server.js`.
 
-## How to use it With OBS 
+# How to use it With OBS 
 ##Techbot 
   1. Visit index.html after running the project
   2. Click Techbot Butoon on the top right
