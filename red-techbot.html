@@ -11,15 +11,15 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
       :root {
-        --bg: #050a0f;
-        --panel: #0a1520;
-        --border: #1a2f45;
-        --red: #ff2d55;
-        --red-dim: #550010;
-        --red-glow: rgba(255, 45, 85, 0.35);
+        --bg: #f4f6f8;
+        --panel: #ffffff;
+        --border: #dce3ea;
+        --red: #e53935;
+        --red-dim: #ffcdd2;
+        --red-glow: rgba(229, 57, 53, 0.18);
         --gold: #ffd700;
-        --text: #e0f0ff;
-        --text-dim: #5a7a9a;
+        --text: #1e293b;
+        --text-dim: #64748b;
         --font-head: "Orbitron", monospace;
         --font-mono: "Share Tech Mono", monospace;
       }
@@ -38,28 +38,10 @@
         font-family: var(--font-mono);
         min-height: 100vh;
         overflow-x: hidden;
-        background-image:
-          radial-gradient(
-            ellipse 80% 50% at 50% -20%,
-            rgba(255, 45, 85, 0.06) 0%,
-            transparent 70%
-          ),
-          linear-gradient(180deg, #050a0f 0%, #030609 100%);
       }
 
       body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 3px,
-          rgba(0, 0, 0, 0.08) 3px,
-          rgba(0, 0, 0, 0.08) 4px
-        );
-        pointer-events: none;
-        z-index: 9999;
+        display: none;
       }
 
       .header {
@@ -91,9 +73,6 @@
         font-weight: 900;
         letter-spacing: 0.25em;
         color: var(--red);
-        text-shadow:
-          0 0 20px var(--red),
-          0 0 40px var(--red-glow);
         text-transform: uppercase;
       }
       .header-sub {
@@ -130,8 +109,10 @@
       .team-panel {
         padding: 20px;
         border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
         position: relative;
-        border-radius: 4px;
+        border-radius: 8px;
       }
 
       .team-panel.red::before {
@@ -147,8 +128,7 @@
           var(--red),
           transparent
         );
-        box-shadow: 0 0 14px var(--red);
-        border-radius: 4px 4px 0 0;
+        border-radius: 8px 8px 0 0;
       }
 
       .team-header {
@@ -213,12 +193,10 @@
         outline: none;
         width: 100%;
         text-transform: uppercase;
-        text-shadow: 0 0 12px var(--red-glow);
         transition: border-color 0.2s;
       }
       .team-name-input:focus {
         border-color: var(--red);
-        box-shadow: 0 2px 0 var(--red);
       }
 
       .score-display {
@@ -230,30 +208,28 @@
         line-height: 1;
         letter-spacing: -0.02em;
         color: var(--red);
-        text-shadow:
-          0 0 30px var(--red),
-          0 0 60px var(--red-glow);
-        transition: text-shadow 0.15s;
+        transition: transform 0.15s;
       }
 
       .score-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-        margin-top: 10px;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-top: 15px !important;
       }
 
       .score-btn {
         position: relative;
-        padding: 12px 8px;
+        padding: 8px 4px !important;
         font-family: var(--font-head);
-        font-size: 13px;
+        font-size: 11px !important;
+        line-height: 1.2 !important;
         font-weight: 700;
         letter-spacing: 0.05em;
         border: 1px solid;
         background: transparent;
         cursor: pointer;
-        border-radius: 2px;
+        border-radius: 6px !important;
         transition: all 0.12s;
         overflow: hidden;
       }
@@ -272,25 +248,41 @@
       .score-btn.add {
         color: var(--red);
         border-color: var(--red-dim);
-        text-shadow: 0 0 8px var(--red-glow);
+        background: #fff;
       }
       .score-btn.add:hover {
         border-color: var(--red);
-        box-shadow:
-          0 0 14px var(--red-glow),
-          inset 0 0 10px rgba(255, 45, 85, 0.08);
+        background: #fff5f5;
+        box-shadow: 0 2px 8px var(--red-glow);
       }
       .score-btn.add:hover::before {
         opacity: 1;
       }
 
       .score-btn.sub {
-        color: #774455;
-        border-color: #2f1a20;
+        color: var(--text-dim) !important;
+        border-color: var(--border) !important;
+        background: #f8fafc !important;
+        text-shadow: none !important;
       }
       .score-btn.sub:hover {
-        color: var(--red);
-        border-color: var(--red-dim);
+        color: var(--text) !important;
+        border-color: #94a3b8 !important;
+        background: #eef2f7 !important;
+      }
+
+      .score-btn.add.active {
+        background: var(--red) !important;
+        color: #ffffff !important;
+        border-color: var(--red) !important;
+        opacity: 1 !important;
+      }
+      .score-btn:disabled:not(.active) {
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+      }
+      .score-btn.active:disabled {
+        opacity: 1 !important;
       }
 
       .btn-label {
@@ -305,6 +297,7 @@
         justify-content: space-between;
         gap: 10px;
         border-top: 1px solid var(--border);
+        background: var(--panel);
         flex-wrap: wrap;
       }
 
@@ -404,23 +397,59 @@
         </div>
         <div class="score-display" id="redScore">0</div>
         <div class="score-buttons">
-          <button class="score-btn add" onclick="adjustScore(1)">
-            <span class="btn-label">+1</span>
+          <button class="score-btn add" onclick="adjustScore(5)">
+            <span class="btn-label">+Technical Regs</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore(2)">
-            <span class="btn-label">+2</span>
+          <button class="score-btn sub" onclick="adjustScore(-5)">
+            <span class="btn-label">−Technical Regs</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore(4)">
-            <span class="btn-label">+4</span>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore(-1)">
-            <span class="btn-label">−1</span>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore(-2)">
-            <span class="btn-label">−2</span>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Zone 2</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore(-4)">
-            <span class="btn-label">−4</span>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Zone 2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Zone 3</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Zone 3</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Zone 4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Zone 4</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Before TimeSet</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Before TimeSet</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(25)">
+            <span class="btn-label">+Goal Before Opponent</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-25)">
+            <span class="btn-label">−Goal Before Opponent</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore(10)">
+            <span class="btn-label">+Resets &lt; 10</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore(-10)">
+            <span class="btn-label">−Resets &lt; 10</span>
           </button>
         </div>
       </div>
@@ -430,6 +459,24 @@
       <div class="live-status" id="liveStatus">
         <span class="status-dot"></span>
         <span>CONNECTING...</span>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button
+          class="score-btn"
+          onclick="exportCSV()"
+          style="
+            padding: 6px 12px;
+            font-size: 11px;
+            background: #0284c7;
+            border-color: #0284c7;
+            color: #fff;
+            font-family: &quot;Fredoka One&quot;, cursive;
+            border-radius: 6px;
+            cursor: pointer;
+          "
+        >
+          📥 EXPORT CSV
+        </button>
       </div>
     </div>
 
@@ -452,7 +499,31 @@
         redScore: 0,
         redName: "RED TEAM",
         redImg: "",
+        redSwitches: {},
+        redFinalDestTime: "",
+        redGoalBeforeTime: "",
       };
+
+      let matchTimerState = { phase: "idle", playTotal: 120, remaining: 0 };
+
+      function formatMMSS(sec) {
+        const s = Math.max(0, sec);
+        const m = Math.floor(s / 60);
+        const ss = s % 60;
+        return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      function getPlayTimerDisplay() {
+        const state = matchTimerState;
+        if (state.phase === "play") return formatMMSS(state.remaining);
+        if (state.phase === "done") return "00:00";
+        return formatMMSS(state.playTotal);
+      }
+
+      socket.on("timer-state", (state) => {
+        if (!state) return;
+        matchTimerState = state;
+      });
 
       socket.on("connect", () => {
         console.log("Connected to server");
@@ -489,6 +560,8 @@
           currentState.redImg = data.redImg;
           document.getElementById("redAvatar").src = data.redImg;
         }
+
+        updateSwitchesUI(data);
       });
 
       function updateStatus(connected) {
@@ -538,6 +611,191 @@
           value: e.target.value,
         });
       });
+
+      // Switch State Management & CSV Export
+      function initScoreSwitches(teamName) {
+        const panels = document.querySelectorAll(".team-panel");
+        panels.forEach((panel) => {
+          let team = teamName;
+          if (!team) {
+            team = "red";
+          }
+
+          const buttons = panel.querySelectorAll("button.score-btn");
+          buttons.forEach((btn) => {
+            const labelEl = btn.querySelector(".btn-label");
+            if (!labelEl) return;
+            const fullText = labelEl.textContent.trim();
+            const isAdd = fullText.startsWith("+");
+            const switchName = fullText.replace(/^[+−-]/, "").trim();
+
+            btn.dataset.team = team;
+            btn.dataset.switchName = switchName;
+            btn.dataset.isAdd = isAdd;
+
+            const onclickStr = btn.getAttribute("onclick") || "";
+            const match = onclickStr.match(/-?\d+/);
+            const delta = match ? parseInt(match[0], 10) : 0;
+            btn.dataset.delta = delta;
+
+            btn.onclick = (e) => {
+              e.preventDefault();
+              handleSwitchClick(team, switchName, isAdd, delta);
+            };
+          });
+        });
+      }
+
+      function normalizeSwitchStatus(value) {
+        if (value === true || value === "added") return "added";
+        return "ready";
+      }
+
+      function handleSwitchClick(team, switchName, isAdd, delta) {
+        const switches = currentState.redSwitches || {};
+        const status = normalizeSwitchStatus(switches[switchName]);
+
+        if (isAdd && status === "ready") {
+          let timeStr = "";
+          if (switchName === "...") {
+            timeStr = getPlayTimerDisplay();
+          }
+          socket.emit("tech-switch-change", {
+            team,
+            switchName,
+            status: "added",
+            delta,
+            timeStr,
+          });
+        } else if (!isAdd && status === "added") {
+          socket.emit("tech-switch-change", {
+            team,
+            switchName,
+            status: "ready",
+            delta,
+          });
+        }
+      }
+
+      function updateSwitchesUI(data) {
+        currentState.redSwitches = data.redSwitches || {};
+        currentState.redFinalDestTime = data.redFinalDestTime || "";
+        currentState.redGoalBeforeTime = data.redGoalBeforeTime || "";
+
+        const buttons = document.querySelectorAll("button.score-btn");
+        buttons.forEach((btn) => {
+          const team = btn.dataset.team;
+          const switchName = btn.dataset.switchName;
+          const isAdd = btn.dataset.isAdd === "true";
+
+          if (!team || !switchName) return;
+
+          const switches = currentState.redSwitches;
+          const status = normalizeSwitchStatus(switches[switchName]);
+
+          btn.classList.remove("active");
+
+          if (status === "ready") {
+            btn.disabled = !isAdd;
+          } else if (status === "added") {
+            if (isAdd) {
+              btn.classList.add("active");
+              btn.disabled = true;
+            } else {
+              btn.disabled = false;
+            }
+          }
+        });
+
+        const time = currentState.redFinalDestTime;
+        let label = document.getElementById("redFinalDestLabel");
+        if (!label) {
+          const subBtn = Array.from(
+            document.querySelectorAll("button.score-btn"),
+          ).find(
+            (btn) =>
+              btn.dataset.team === "red" &&
+              btn.dataset.switchName === "Goal Before Opponent" &&
+              btn.dataset.isAdd === "false",
+          );
+          if (subBtn) {
+            label = document.createElement("div");
+            label.id = "redFinalDestLabel";
+            label.style.cssText =
+              "font-size:11px;color:#e65100;font-weight:bold;margin-top:4px;text-align:center;width:100%;grid-column:span 2;";
+            subBtn.parentNode.insertBefore(label, subBtn.nextSibling);
+          }
+        }
+        if (label) {
+          label.textContent = time ? "Destination Time: " + time : "";
+        }
+
+        const goalTime = currentState.redGoalBeforeTime;
+        let goalLabel = document.getElementById("redGoalBeforeLabel");
+        if (!goalLabel) {
+          const subBtn = Array.from(
+            document.querySelectorAll("button.score-btn"),
+          ).find(
+            (btn) =>
+              btn.dataset.team === "red" &&
+              (btn.dataset.switchName === "Goal Before Opponent" ||
+                btn.dataset.switchName === "Goal Goal Before Opponent") &&
+              btn.dataset.isAdd === "false",
+          );
+          if (subBtn) {
+            goalLabel = document.createElement("div");
+            goalLabel.id = "redGoalBeforeLabel";
+            goalLabel.style.cssText =
+              "font-size:11px;color:#7c3aed;font-weight:bold;margin-top:4px;text-align:center;width:100%;grid-column:span 2;";
+            subBtn.parentNode.insertBefore(goalLabel, subBtn.nextSibling);
+          }
+        }
+        if (goalLabel) {
+          goalLabel.textContent = goalTime ? "Goal Time: " + goalTime : "";
+        }
+      }
+
+      function exportCSV() {
+        const rows = [
+          ["Team", "Score", "Robot Stop At Finish Time", "Active Zones"],
+          [
+            currentState.redName || "Red Team",
+            currentState.redScore || 0,
+            currentState.redFinalDestTime || "N/A",
+            Object.entries(currentState.redSwitches || {})
+              .filter(([_, status]) => status === "added")
+              .map(([name]) => name)
+              .join("; ") || "None",
+          ],
+        ];
+
+        const formatCsvValue = (val) => {
+          const text = val == null ? "" : String(val);
+          return `"${text.replace(/"/g, '""')}"`;
+        };
+
+        const csvContent = rows
+          .map((row) => row.map(formatCsvValue).join(","))
+          .join("\r\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `TechBot_RedTeam_Results_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Initialize switches after script runs
+      setTimeout(() => {
+        initScoreSwitches("red");
+        updateSwitchesUI(currentState);
+      }, 100);
     </script>
   </body>
 </html>

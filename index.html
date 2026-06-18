@@ -382,9 +382,9 @@
         updateConnectionUI(false);
       });
 
-      const COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6"];
+      const COLORS = ["#EF4444", "#8B5CF6", "#06B6D4", "#22C55E", "#EC4899", "#EAB308"];
       const EMOJIS = ["1", "2", "3", "4", "5", "6"];
-      const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
+      const MEDALS = ["#1", "#2", "#3", "#4", "#5", "#6"];
       const MAX_TEAMS = 6;
 
       let teams = [
@@ -439,8 +439,10 @@
           if (!raw) return;
 
           const state = JSON.parse(raw);
-          if (Array.isArray(state.teams) && state.teams.length)
+          if (Array.isArray(state.teams) && state.teams.length) {
             teams = state.teams;
+            teams.sort((a, b) => a.id - b.id);
+          }
           if (Array.isArray(state.finishOrder)) finishOrder = state.finishOrder;
           if (state.finishTimes && typeof state.finishTimes === "object")
             finishTimes = state.finishTimes;
@@ -580,10 +582,15 @@
         }
       }
 
+      function sortTeams() {
+        teams.sort((a, b) => a.id - b.id);
+      }
+
       function addTeam() {
         const id = getNextTeamId();
         if (id == null) return;
         teams.push({ id, name: `Team ${id}`, img: null });
+        sortTeams();
         renderTeamPool();
       }
 
@@ -646,6 +653,7 @@
         if (team) {
           team.score = val === "" ? null : Number(val);
           send();
+          renderFinishList();
         }
       }
 

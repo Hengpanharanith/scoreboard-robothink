@@ -263,7 +263,13 @@ let displayData = {
   redImg: "",
   compName: "FOLLOW LINE ROBOT CUP",
   roundNum: 1,
-  roundLabel: "QUALIFICATION"
+  roundLabel: "QUALIFICATION",
+  blueSwitches: {},
+  redSwitches: {},
+  blueFinalDestTime: "",
+  redFinalDestTime: "",
+  blueGoalBeforeTime: "",
+  redGoalBeforeTime: ""
 }
 
 let timerState = {
@@ -272,6 +278,21 @@ let timerState = {
   playTotal: 120,
   remaining: 0,
   running: false
+}
+
+const FINAL_DEST_POINTS = 25
+
+function formatMMSS(sec) {
+  const s = Math.max(0, sec)
+  const m = Math.floor(s / 60)
+  const ss = s % 60
+  return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0')
+}
+
+function getPlayTimerDisplay() {
+  if (timerState.phase === 'play') return formatMMSS(timerState.remaining)
+  if (timerState.phase === 'done') return '00:00'
+  return formatMMSS(timerState.playTotal)
 }
 
 const express = require("express")
@@ -312,6 +333,7 @@ let buttonStates = {
   3: { id: 3, state: "ready", pressed: false, ready: true },
   4: { id: 4, state: "ready", pressed: false, ready: true },
   5: { id: 5, state: "ready", pressed: false, ready: true },
+  6: { id: 6, state: "ready", pressed: false, ready: true },
 }
 let reconnectTimer = null
 let isShuttingDown = false
@@ -513,9 +535,52 @@ io.on("connection", (socket) => {
     if (newScore < 0) newScore = 0
     
     displayData[scoreKey] = newScore
+
+    // If score is reset to 0, clear switches and final destination time
+    if (newScore === 0) {
+      displayData[team + "Switches"] = {};
+      displayData[team + "FinalDestTime"] = "";
+    }
+
     console.log(`Score updated: ${team} now ${newScore} (controller: ${socketId})`)
     
     // Broadcast to ALL clients
+    io.emit("scoreboard-state", displayData)
+  })
+
+  socket.on("tech-switch-change", (data) => {
+    const { team, switchName, status, delta, timeStr } = data
+    if (!team || !switchName || !status) return
+
+    const switchesKey = team + "Switches"
+    if (!displayData[switchesKey]) displayData[switchesKey] = {}
+
+    if (status === "ready" || status === "subtracted") {
+      delete displayData[switchesKey][switchName]
+    } else {
+      displayData[switchesKey][switchName] = status
+    }
+
+    if (switchName === "Final Destination") {
+      const timeKey = team + "FinalDestTime"
+      displayData[timeKey] = status === "added" ? (timeStr || getPlayTimerDisplay()) : ""
+    }
+
+    if (switchName === "Goal Before Opponent" || switchName === "Before Opponent") {
+      const timeKey = team + "GoalBeforeTime"
+      displayData[timeKey] = status === "added" ? (timeStr || getPlayTimerDisplay()) : ""
+    }
+
+    const scoreKey = team + "Score"
+    let scoreDelta = delta
+    if (switchName === "Final Destination") {
+      scoreDelta = status === "added" ? FINAL_DEST_POINTS : -FINAL_DEST_POINTS
+    }
+    let newScore = (displayData[scoreKey] || 0) + scoreDelta
+    if (newScore < 0) newScore = 0
+    displayData[scoreKey] = newScore
+
+    console.log(`Switch updated: ${team} - ${switchName} is now ${status} (controller: ${socketId})`)
     io.emit("scoreboard-state", displayData)
   })
 
@@ -547,7 +612,13 @@ io.on("connection", (socket) => {
   socket.on("reset-scores", () => {
     displayData.blueScore = 0
     displayData.redScore = 0
-    console.log("Scores reset (controller: " + socketId + ")")
+    displayData.blueSwitches = {}
+    displayData.redSwitches = {}
+    displayData.blueFinalDestTime = ""
+    displayData.redFinalDestTime = ""
+    displayData.blueGoalBeforeTime = ""
+    displayData.redGoalBeforeTime = ""
+    console.log("Scores and switches reset (controller: " + socketId + ")")
     io.emit("scoreboard-state", displayData)
   })
 

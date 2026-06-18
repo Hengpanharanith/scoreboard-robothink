@@ -485,3 +485,36 @@ input[type="file"] {
     border-right: none;
   }
 }
+
+/* Active and disabled button states */
+.blue .score-btn.add.active {
+  background: var(--blue) !important;
+  color: #ffffff !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 4px 12px var(--blue-glow) !important;
+}
+.red .score-btn.add.active {
+  background: var(--red) !important;
+  color: #ffffff !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 4px 12px var(--red-glow) !important;
+}
+.blue .score-btn.sub.active {
+  background: var(--blue) !important;
+  color: #ffffff !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 4px 12px var(--blue-glow) !important;
+  opacity: 1 !important;
+}
+.red .score-btn.sub.active {
+  background: var(--red) !important;
+  color: #ffffff !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 4px 12px var(--red-glow) !important;
+  opacity: 1 !important;
+}
+.score-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}

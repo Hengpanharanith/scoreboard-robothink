@@ -214,13 +214,13 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 5rem;
+  padding: 1.5rem;
 }
 #teams-grid {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 30px;
+  gap: 15px;
   width: 100%;
 }
 
@@ -229,19 +229,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 0 0 560px;
-  min-width: 700px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  max-width: 280px;
+  width: 100%;
 }
 .team-card {
   background: rgba(255, 255, 255, 0.88);
   border-radius: 24px;
-  padding: 24px 20px;
+  padding: 20px 15px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  min-height: 400px; /* instead of 700-800px */
+  min-height: 360px; /* slightly more compact */
   width: 100%;
 
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -303,6 +305,7 @@ body {
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
   animation: medalPop 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   z-index: 5;
+  display: none;
 }
 @keyframes medalPop {
   0% {
@@ -808,28 +811,20 @@ body.flash-warn {
 
 /* ===== SCORE BADGE ===== */
 .score-announce-badge {
-  margin-top: auto; /* Pushes badge to the very bottom of the card */
-  width: 100%;
+  margin-top: 14px;
   font-family: "Fredoka One", cursive;
-  font-size: 28px;
-  /* font-weight: 900; */
-  padding: 10px 16px;
-  border-radius: 18px;
-  background: linear-gradient(
-    135deg,
-    var(--tc) 0%,
-    rgba(255, 255, 255, 0.15) 100%
-  );
-  color: #000000;
-  /* text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); */
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  display: flex;
+  font-size: 24px;
+  font-weight: 900;
+  padding: 8px 20px;
+  border-radius: 16px;
+  border: 3px solid;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  animation: scorePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  /* animation: scorePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; */
   white-space: nowrap;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 @keyframes scorePop {
   0% {

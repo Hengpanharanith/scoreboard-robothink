@@ -330,7 +330,7 @@
     </div>
 
     <script>
-      const MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"];
+      const MEDALS = ["#1", "#2", "#3", "#4", "#5", "#6"];
       const CC = [
         "#3B82F6",
         "#EF4444",
@@ -402,61 +402,58 @@
           if (!newIds.has(c.id)) c.remove();
         });
 
-        teams.forEach((t, i) => {
+        // Sort teams by ID to ensure they are always displayed in order 1-6
+        const sortedTeams = [...teams].sort((a, b) => a.id - b.id);
+
+        sortedTeams.forEach((t, i) => {
           const rank = fo.includes(t.id) ? fo.indexOf(t.id) + 1 : null;
           const held = !!pressedTeams[t.id];
-          let card = document.getElementById("tc_" + t.id);
-          if (!card) {
-            card = document.createElement("div");
-            card.id = "tc_" + t.id;
-            grid.appendChild(card);
+          let col = document.getElementById("tc_" + t.id);
+          if (!col) {
+            col = document.createElement("div");
+            col.id = "tc_" + t.id;
           }
+          // Always append to grid to ensure they are in the correct sorted DOM order!
+          grid.appendChild(col);
+          col.className = "team-col";
+
           const wasFinished = prevFO.includes(t.id);
           const justFinished = !wasFinished && !!rank;
 
           // set CSS var for colour
           const tc = t.color || "#3B82F6";
-          card.style.setProperty("--tc", tc);
-          card.style.setProperty("--tc-soft", tc + "12");
-          card.className =
-            "team-card" +
-            (rank ? " finished" : "") +
-            (rank === 1 ? " rank-1" : "") +
-            (held ? " holding" : "");
-
           const fdur = 2.5 + i * 0.4 + "s";
           const fdel = i * 0.3 + "s";
           const pushTime = pushedTimes[t.id] || "";
-          const statusText = held
-            ? "⏸ STOPPED"
-            : rank
-              ? `#${rank} FINISHED`
+          const statusText = rank
+            ? `Done #${rank}`
+            : held
+              ? "Done"
               : "READY";
-          const statusClass = held ? "s-hold" : rank ? "s-done" : "s-wait";
+          const statusClass = rank ? "s-done" : held ? "s-hold" : "s-wait";
 
-          card.innerHTML = `
-      ${rank ? `<div class="rank-badge">${MEDALS[rank - 1]}</div>` : ""}
-      <div class="team-img-wrap">
-        ${
-          t.img
-            ? `<img class="img-float" style="--fdur:${fdur};--fdel:${fdel}" src="${t.img}">`
-            : `<span class="emoji-bob" style="--fdur:${fdur};--fdel:${fdel}">${t.emoji || "🤖"}</span>`
-        }
-      </div>
-      <div class="team-name-text">${t.name}</div>
-      <div class="status-chip ${statusClass}" style="${rank && !held ? `background:${tc};border-color:${tc}` : held ? `background:#FFFBEB;border-color:#FCD34D;color:#B45309;` : ""}">
-        ${statusText}
-      </div>
-      <div class="push-chip" style="display:${pushTime ? "block" : "none"};${pushTime ? `border-color:${tc}40;color:${tc};background:${tc}10;` : ""}">
-        ${pushTime ? `${held ? "Pressed" : "Last push"} ${pushTime}` : ""}
-      </div>
-      <div class="finish-chip" style="color:${tc};background:${tc}18;border:2px solid ${tc}40;">
-        ⏱ ${t.finishTime || ""}
+          col.innerHTML = `
+      <div class="team-card${rank ? " finished" : ""}${rank === 1 ? " rank-1" : ""}${held ? " holding" : ""}" style="--tc: ${tc}; --tc-soft: ${tc}12;">
+        ${rank ? `<div class="rank-badge">${MEDALS[rank - 1]}</div>` : ""}
+        <div class="team-img-wrap">
+          ${
+            t.img
+              ? `<img class="img-float" style="--fdur:${fdur};--fdel:${fdel}" src="${t.img}">`
+              : `<span class="emoji-bob" style="--fdur:${fdur};--fdel:${fdel}">${t.emoji || "🤖"}</span>`
+          }
+        </div>
+        <div class="team-name-text">${t.name}</div>
+        <div class="status-chip ${statusClass}" style="${rank ? `background:${tc};border-color:${tc}` : held ? `background:#FFFBEB;border-color:#FCD34D;color:#B45309;` : ""}">
+          ${statusText}
+        </div>
+        <div class="finish-chip" style="color:${tc};background:${tc}18;border:2px solid ${tc}40;">
+          ⏱ ${t.finishTime || ""}
+        </div>
       </div>
       ${
         t.score !== undefined && t.score !== null && t.score !== ""
           ? `
-        <div class="score-announce-badge">
+        <div class="score-announce-badge" style="color:${tc}; border-color:${tc}50; background:${tc}10;">
           ⭐ SCORE: ${t.score}
         </div>
       `
@@ -465,8 +462,11 @@
     `;
 
           if (justFinished) {
-            const r = card.getBoundingClientRect();
-            spawnConfetti(r.left + r.width / 2, r.top + r.height / 2);
+            const cardElement = col.querySelector(".team-card");
+            if (cardElement) {
+              const r = cardElement.getBoundingClientRect();
+              spawnConfetti(r.left + r.width / 2, r.top + r.height / 2);
+            }
           }
         });
         prevFO = [...fo];

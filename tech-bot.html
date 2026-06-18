@@ -263,6 +263,34 @@
         background: rgba(198, 40, 40, 0.06);
       }
 
+      .score-buttons {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-top: 15px !important;
+      }
+      .score-btn {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        line-height: 1.2 !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+      }
+      .score-btn.sub {
+        color: #78909c !important;
+        border-color: #dde3ed !important;
+        background: #f8faff !important;
+        text-shadow: none !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+      }
+      .score-btn.sub:hover {
+        color: #546e7a !important;
+        border-color: #b0bec5 !important;
+        background: #eceff1 !important;
+        box-shadow: 0 3px 8px rgba(120, 144, 156, 0.2) !important;
+      }
+
       .action-btn {
         background: #ffffff;
         border: 1px solid var(--border);
@@ -723,23 +751,59 @@
         </div>
         <div class="score-display" id="blueScore">0</div>
         <div class="score-buttons">
-          <button class="score-btn add" onclick="adjustScore('blue', 1)">
-            <span class="btn-label">+1</span>
+          <button class="score-btn add" onclick="adjustScore('blue', 5)">
+            <span class="btn-label">+Technical Requirement</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore('blue', 2)">
-            <span class="btn-label">+2</span>
+          <button class="score-btn sub" onclick="adjustScore('blue', -5)">
+            <span class="btn-label">−Technical Requirement</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore('blue', 4)">
-            <span class="btn-label">+4</span>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('blue', -1)">
-            <span class="btn-label">−1</span>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('blue', -2)">
-            <span class="btn-label">−2</span>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Zone 2</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('blue', -4)">
-            <span class="btn-label">−4</span>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Zone 2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Zone 3</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Zone 3</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Zone 4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Zone 4</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Before TimeSet</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Before TimeSet</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 25)">
+            <span class="btn-label">+Goal Before Opponent</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -25)">
+            <span class="btn-label">−Goal Before Opponent</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('blue', 10)">
+            <span class="btn-label">+Resets &lt; 10</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('blue', -10)">
+            <span class="btn-label">−Resets &lt; 10</span>
           </button>
         </div>
       </div>
@@ -770,23 +834,59 @@
         </div>
         <div class="score-display" id="redScore">0</div>
         <div class="score-buttons">
-          <button class="score-btn add" onclick="adjustScore('red', 1)">
-            <span class="btn-label">+1</span>
+          <button class="score-btn add" onclick="adjustScore('red', 5)">
+            <span class="btn-label">+Technical Requirement</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore('red', 2)">
-            <span class="btn-label">+2</span>
+          <button class="score-btn sub" onclick="adjustScore('red', -5)">
+            <span class="btn-label">−Technical Requirement</span>
           </button>
-          <button class="score-btn add" onclick="adjustScore('red', 4)">
-            <span class="btn-label">+4</span>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('red', -1)">
-            <span class="btn-label">−1</span>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Zone 1</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('red', -2)">
-            <span class="btn-label">−2</span>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Zone 2</span>
           </button>
-          <button class="score-btn sub" onclick="adjustScore('red', -4)">
-            <span class="btn-label">−4</span>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Zone 2</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Zone 3</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Zone 3</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Zone 4</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Zone 4</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Before TimeSet</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Before TimeSet</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 25)">
+            <span class="btn-label">+Goal Before Opponent</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -25)">
+            <span class="btn-label">−Goal Before Opponent</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Robot Stop At Finish</span>
+          </button>
+          <button class="score-btn add" onclick="adjustScore('red', 10)">
+            <span class="btn-label">+Resets &lt; 10</span>
+          </button>
+          <button class="score-btn sub" onclick="adjustScore('red', -10)">
+            <span class="btn-label">−Resets &lt; 10</span>
           </button>
         </div>
       </div>
@@ -889,6 +989,13 @@
         <button class="action-btn btn-reset" onclick="openDisplay()">
           ⬡ DISPLAY
         </button>
+        <button
+          class="action-btn btn-reset"
+          onclick="exportCSV()"
+          style="background: #0284c7; border-color: #0284c7; color: #fff"
+        >
+          📥 EXPORT CSV
+        </button>
         <button class="action-btn btn-reset" onclick="resetAll()">
           ↺ RESET
         </button>
@@ -919,6 +1026,12 @@
         compName: "",
         roundNum: "",
         roundLabel: "",
+        blueSwitches: {},
+        redSwitches: {},
+        blueFinalDestTime: "",
+        redFinalDestTime: "",
+        blueGoalBeforeTime: "",
+        redGoalBeforeTime: "",
       };
 
       socket.on("connect", () => {
@@ -1002,6 +1115,8 @@
           currentState.roundLabel = data.roundLabel;
           document.getElementById("roundLabel").value = data.roundLabel;
         }
+
+        updateSwitchesUI(data);
       });
 
       function updateStatus(connected) {
@@ -1022,6 +1137,225 @@
         void el.offsetWidth;
         el.classList.add("score-bump");
       }
+
+      // Switch State Management & CSV Export
+      function initScoreSwitches(teamName) {
+        const panels = document.querySelectorAll(".team-panel");
+        panels.forEach((panel) => {
+          let team = teamName;
+          if (!team) {
+            team = panel.classList.contains("blue")
+              ? "blue"
+              : panel.classList.contains("red")
+                ? "red"
+                : "";
+          }
+          if (!team) return;
+
+          const buttons = panel.querySelectorAll("button.score-btn");
+          buttons.forEach((btn) => {
+            const labelEl = btn.querySelector(".btn-label");
+            if (!labelEl) return;
+            const fullText = labelEl.textContent.trim();
+            const isAdd = fullText.startsWith("+");
+            const switchName = fullText.replace(/^[+−-]/, "").trim();
+
+            btn.dataset.team = team;
+            btn.dataset.switchName = switchName;
+            btn.dataset.isAdd = isAdd;
+
+            const onclickStr = btn.getAttribute("onclick") || "";
+            const match = onclickStr.match(/-?\d+/);
+            const delta = match ? parseInt(match[0], 10) : 0;
+            btn.dataset.delta = delta;
+
+            btn.onclick = (e) => {
+              e.preventDefault();
+              handleSwitchClick(team, switchName, isAdd, delta);
+            };
+          });
+        });
+      }
+
+      function normalizeSwitchStatus(value) {
+        if (value === true || value === "added") return "added";
+        return "ready";
+      }
+
+      function handleSwitchClick(team, switchName, isAdd, delta) {
+        const switches =
+          (team === "blue"
+            ? currentState.blueSwitches
+            : currentState.redSwitches) || {};
+        const status = normalizeSwitchStatus(switches[switchName]);
+
+        if (isAdd && status === "ready") {
+          let timeStr = "";
+          if (switchName === "Goal Before Opponent") {
+            timeStr = getPlayTimerDisplay();
+          }
+          socket.emit("tech-switch-change", {
+            team,
+            switchName,
+            status: "added",
+            delta,
+            timeStr,
+          });
+        } else if (!isAdd && status === "added") {
+          socket.emit("tech-switch-change", {
+            team,
+            switchName,
+            status: "ready",
+            delta,
+          });
+        }
+      }
+
+      function updateSwitchesUI(data) {
+        currentState.blueSwitches = data.blueSwitches || {};
+        currentState.redSwitches = data.redSwitches || {};
+        currentState.blueFinalDestTime = data.blueFinalDestTime || "";
+        currentState.redFinalDestTime = data.redFinalDestTime || "";
+        currentState.blueGoalBeforeTime = data.blueGoalBeforeTime || "";
+        currentState.redGoalBeforeTime = data.redGoalBeforeTime || "";
+
+        const buttons = document.querySelectorAll("button.score-btn");
+        buttons.forEach((btn) => {
+          const team = btn.dataset.team;
+          const switchName = btn.dataset.switchName;
+          const isAdd = btn.dataset.isAdd === "true";
+
+          if (!team || !switchName) return;
+
+          const switches =
+            team === "blue"
+              ? currentState.blueSwitches
+              : currentState.redSwitches;
+          const status = normalizeSwitchStatus(switches[switchName]);
+
+          btn.classList.remove("active");
+
+          if (status === "ready") {
+            btn.disabled = !isAdd;
+          } else if (status === "added") {
+            if (isAdd) {
+              btn.classList.add("active");
+              btn.disabled = true;
+            } else {
+              btn.disabled = false;
+            }
+          }
+        });
+
+        // Robot Stop At Finish time label
+        ["blue", "red"].forEach((team) => {
+          const time =
+            team === "blue"
+              ? currentState.blueFinalDestTime
+              : currentState.redFinalDestTime;
+          let label = document.getElementById(team + "FinalDestLabel");
+          if (!label) {
+            const subBtn = Array.from(
+              document.querySelectorAll("button.score-btn"),
+            ).find(
+              (btn) =>
+                btn.dataset.team === team &&
+                btn.dataset.switchName === "Goal Before Opponent" &&
+                btn.dataset.isAdd === "false",
+            );
+            if (subBtn) {
+              label = document.createElement("div");
+              label.id = team + "FinalDestLabel";
+              label.style.cssText =
+                "font-size:11px;color:#e65100;font-weight:bold;margin-top:4px;text-align:center;width:100%;grid-column:span 2;";
+              subBtn.parentNode.insertBefore(label, subBtn.nextSibling);
+            }
+          }
+          if (label) {
+            label.textContent = time ? "Stop Time: " + time : "";
+          }
+        });
+
+        // Goal Before Opponent time label
+        ["blue", "red"].forEach((team) => {
+          const time =
+            team === "blue"
+              ? currentState.blueGoalBeforeTime
+              : currentState.redGoalBeforeTime;
+          let label = document.getElementById(team + "GoalBeforeLabel");
+          if (!label) {
+            const subBtn = Array.from(
+              document.querySelectorAll("button.score-btn"),
+            ).find(
+              (btn) =>
+                btn.dataset.team === team &&
+                btn.dataset.switchName === "Goal Before Opponent" &&
+                btn.dataset.isAdd === "false",
+            );
+            if (subBtn) {
+              label = document.createElement("div");
+              label.id = team + "GoalBeforeLabel";
+              label.style.cssText =
+                "font-size:11px;color:#7c3aed;font-weight:bold;margin-top:4px;text-align:center;width:100%;grid-column:span 2;";
+              subBtn.parentNode.insertBefore(label, subBtn.nextSibling);
+            }
+          }
+          if (label) {
+            label.textContent = time ? "Goal Time: " + time : "";
+          }
+        });
+      }
+
+      function exportCSV() {
+        const rows = [
+          ["Team", "Score", "Robot Stop At Finish Time", "Active Zones"],
+          [
+            currentState.blueName || "Blue Team",
+            currentState.blueScore || 0,
+            currentState.blueFinalDestTime || "N/A",
+            Object.entries(currentState.blueSwitches || {})
+              .filter(([_, status]) => status === "added")
+              .map(([name]) => name)
+              .join("; ") || "None",
+          ],
+          [
+            currentState.redName || "Red Team",
+            currentState.redScore || 0,
+            currentState.redFinalDestTime || "N/A",
+            Object.entries(currentState.redSwitches || {})
+              .filter(([_, status]) => status === "added")
+              .map(([name]) => name)
+              .join("; ") || "None",
+          ],
+        ];
+
+        const formatCsvValue = (val) => {
+          const text = val == null ? "" : String(val);
+          return `"${text.replace(/"/g, '""')}"`;
+        };
+
+        const csvContent = rows
+          .map((row) => row.map(formatCsvValue).join(","))
+          .join("\r\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `TechBot_Match_Results_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Initialize switches after script runs
+      setTimeout(() => {
+        initScoreSwitches();
+        updateSwitchesUI(currentState);
+      }, 100);
 
       function adjustScore(team, delta) {
         socket.emit("score-change", { team, delta });
@@ -1117,6 +1451,13 @@
         const m = Math.floor(s / 60);
         const ss = s % 60;
         return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+      }
+
+      function getPlayTimerDisplay() {
+        const state = localTimerState;
+        if (state.phase === "play") return formatMMSS(state.remaining);
+        if (state.phase === "done") return "00:00";
+        return formatMMSS(state.playTotal);
       }
 
       function applyTimerInput(phase) {
