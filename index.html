@@ -50,14 +50,18 @@
         gap: 16px;
       }
       .timer-block {
-        background: #F8FAFF;
+        background: #f8faff;
         border: 2px solid var(--border);
         border-radius: 16px;
         padding: 16px;
         transition: border-color 0.3s;
       }
-      .timer-block.prep { border-color: rgba(245,158,11,0.25); }
-      .timer-block.play { border-color: rgba(59,130,246,0.25); }
+      .timer-block.prep {
+        border-color: rgba(245, 158, 11, 0.25);
+      }
+      .timer-block.play {
+        border-color: rgba(59, 130, 246, 0.25);
+      }
       .timer-block-header {
         display: flex;
         justify-content: space-between;
@@ -68,8 +72,12 @@
         font-weight: 800;
         font-size: 14px;
       }
-      .timer-block.prep .timer-block-label { color: #D97706; }
-      .timer-block.play .timer-block-label { color: #3B82F6; }
+      .timer-block.prep .timer-block-label {
+        color: #d97706;
+      }
+      .timer-block.play .timer-block-label {
+        color: #3b82f6;
+      }
       .timer-phase-badge {
         font-size: 10px;
         font-weight: 800;
@@ -78,32 +86,47 @@
         letter-spacing: 0.05em;
       }
       .timer-phase-badge.active {
-        background: #D1FAE5;
-        color: #065F46;
+        background: #d1fae5;
+        color: #065f46;
       }
       .timer-phase-badge.paused {
-        background: #FEF3C7;
-        color: #92400E;
+        background: #fef3c7;
+        color: #92400e;
       }
       .timer-phase-badge.idle {
-        background: #F3F4F6;
-        color: #4B5563;
+        background: #f3f4f6;
+        color: #4b5563;
       }
       .timer-display {
-        font-family: 'Fredoka One', cursive;
+        font-family: "Fredoka One", cursive;
         font-size: 38px;
         text-align: center;
         margin-bottom: 12px;
         letter-spacing: 0.02em;
         line-height: 1;
       }
-      .timer-block.prep .timer-display { color: #F59E0B; }
-      .timer-block.play .timer-display { color: #3B82F6; }
-      .timer-display.warning { color: #EF4444 !important; animation: timerWarn 0.5s ease-in-out infinite; }
-      .timer-display.done { color: #EF4444 !important; opacity: 0.6; }
+      .timer-block.prep .timer-display {
+        color: #f59e0b;
+      }
+      .timer-block.play .timer-display {
+        color: #3b82f6;
+      }
+      .timer-display.warning {
+        color: #ef4444 !important;
+        animation: timerWarn 0.5s ease-in-out infinite;
+      }
+      .timer-display.done {
+        color: #ef4444 !important;
+        opacity: 0.6;
+      }
       @keyframes timerWarn {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(0.96); }
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(0.96);
+        }
       }
       .timer-input-row {
         display: flex;
@@ -130,7 +153,7 @@
       }
       .timer-btn {
         flex: 1;
-        font-family: 'Fredoka One', cursive;
+        font-family: "Fredoka One", cursive;
         font-size: 11px;
         padding: 7px 0;
         border-radius: 9px;
@@ -139,12 +162,30 @@
         transition: all 0.15s;
         background: #fff;
       }
-      .timer-btn.start { color: #059669; border-color: rgba(5,150,105,0.4); }
-      .timer-btn.start:hover { background: rgba(5,150,105,0.08); border-color: #059669; }
-      .timer-btn.pause { color: #D97706; border-color: rgba(217,119,6,0.4); }
-      .timer-btn.pause:hover { background: rgba(217,119,6,0.08); border-color: #D97706; }
-      .timer-btn.reset { color: #EF4444; border-color: rgba(239,68,68,0.4); }
-      .timer-btn.reset:hover { background: rgba(239,68,68,0.08); border-color: #EF4444; }
+      .timer-btn.start {
+        color: #059669;
+        border-color: rgba(5, 150, 105, 0.4);
+      }
+      .timer-btn.start:hover {
+        background: rgba(5, 150, 105, 0.08);
+        border-color: #059669;
+      }
+      .timer-btn.pause {
+        color: #d97706;
+        border-color: rgba(217, 119, 6, 0.4);
+      }
+      .timer-btn.pause:hover {
+        background: rgba(217, 119, 6, 0.08);
+        border-color: #d97706;
+      }
+      .timer-btn.reset {
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+      .timer-btn.reset:hover {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: #ef4444;
+      }
     </style>
   </head>
   <script src="/socket.io/socket.io.js"></script>
@@ -280,7 +321,7 @@
     <!-- TIMER -->
     <div class="card">
       <div class="st">⏱ Match Timer</div>
-      <div class="timer-blocks" style="margin-bottom: 16px;">
+      <div class="timer-blocks" style="margin-bottom: 16px">
         <!-- PREPARATION TIMER -->
         <div class="timer-block prep">
           <div class="timer-block-header">
@@ -290,13 +331,35 @@
           <div class="timer-display" id="prepDisplay">00:30</div>
           <div class="timer-input-row">
             <span class="timer-input-label">SET</span>
-            <input class="timer-input" id="prepInput" type="text" value="00:30" placeholder="MM:SS"
-              onblur="applyTimerInput('prep')" onkeydown="if(event.key==='Enter') applyTimerInput('prep')"/>
+            <input
+              class="timer-input"
+              id="prepInput"
+              type="text"
+              value="00:30"
+              placeholder="MM:SS"
+              onblur="applyTimerInput('prep')"
+              onkeydown="if (event.key === 'Enter') applyTimerInput('prep');"
+            />
           </div>
           <div class="timer-controls">
-            <button class="timer-btn start" onclick="timerControl('prep','start')">▶ START</button>
-            <button class="timer-btn pause" onclick="timerControl('prep','pause')">⏸ PAUSE</button>
-            <button class="timer-btn reset" onclick="timerControl('prep','reset')">↺ RESET</button>
+            <button
+              class="timer-btn start"
+              onclick="timerControl('prep', 'start')"
+            >
+              ▶ START
+            </button>
+            <button
+              class="timer-btn pause"
+              onclick="timerControl('prep', 'pause')"
+            >
+              ⏸ PAUSE
+            </button>
+            <button
+              class="timer-btn reset"
+              onclick="timerControl('prep', 'reset')"
+            >
+              ↺ RESET
+            </button>
           </div>
         </div>
 
@@ -309,19 +372,47 @@
           <div class="timer-display" id="playDisplay">02:00</div>
           <div class="timer-input-row">
             <span class="timer-input-label">SET</span>
-            <input class="timer-input" id="playInput" type="text" value="02:00" placeholder="MM:SS"
-              onblur="applyTimerInput('play')" onkeydown="if(event.key==='Enter') applyTimerInput('play')"/>
+            <input
+              class="timer-input"
+              id="playInput"
+              type="text"
+              value="02:00"
+              placeholder="MM:SS"
+              onblur="applyTimerInput('play')"
+              onkeydown="if (event.key === 'Enter') applyTimerInput('play');"
+            />
           </div>
           <div class="timer-controls">
-            <button class="timer-btn start" onclick="timerControl('play','start')">▶ START</button>
-            <button class="timer-btn pause" onclick="timerControl('play','pause')">⏸ PAUSE</button>
-            <button class="timer-btn reset" onclick="timerControl('play','reset')">↺ RESET</button>
+            <button
+              class="timer-btn start"
+              onclick="timerControl('play', 'start')"
+            >
+              ▶ START
+            </button>
+            <button
+              class="timer-btn pause"
+              onclick="timerControl('play', 'pause')"
+            >
+              ⏸ PAUSE
+            </button>
+            <button
+              class="timer-btn reset"
+              onclick="timerControl('play', 'reset')"
+            >
+              ↺ RESET
+            </button>
           </div>
         </div>
       </div>
-      <div class="tbtns" style="margin-bottom: 12px;">
+      <div class="tbtns" style="margin-bottom: 12px">
         <button class="btt breset" onclick="resetRound()">↺ Reset Round</button>
-        <button class="btt bexp" onclick="exportCsv()" style="margin-left: auto;">⬇ Export CSV</button>
+        <button
+          class="btt bexp"
+          onclick="exportCsv()"
+          style="margin-left: auto"
+        >
+          ⬇ Export CSV
+        </button>
       </div>
       <div class="logw">
         <table>
@@ -382,7 +473,14 @@
         updateConnectionUI(false);
       });
 
-      const COLORS = ["#EF4444", "#8B5CF6", "#06B6D4", "#22C55E", "#EC4899", "#EAB308"];
+      const COLORS = [
+        "#EF4444",
+        "#8B5CF6",
+        "#06B6D4",
+        "#22C55E",
+        "#EC4899",
+        "#EAB308",
+      ];
       const EMOJIS = ["1", "2", "3", "4", "5", "6"];
       const MEDALS = ["#1", "#2", "#3", "#4", "#5", "#6"];
       const MAX_TEAMS = 6;
@@ -633,7 +731,7 @@
               finished
                 ? `
                   <div class="score-announce-zone" style="display: flex; align-items: center; gap: 6px; margin: 0 12px;">
-                    <input type="number" id="score_announce_${team.id}" placeholder="Score" value="${team.score !== undefined && team.score !== null ? team.score : ''}" style="width: 75px; padding: 4px 8px; font-size: 12px; border-radius: 6px; border: 2px solid var(--border);" />
+                    <input type="number" id="score_announce_${team.id}" placeholder="Score" value="${team.score !== undefined && team.score !== null ? team.score : ""}" style="width: 75px; padding: 4px 8px; font-size: 12px; border-radius: 6px; border: 2px solid var(--border);" />
                     <button class="bapply" onclick="applyScore(${team.id})" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; font-family: 'Fredoka One', cursive; margin-left: 0;">Apply</button>
                   </div>
                   <button class="bunfin" onclick="unfinish(${team.id})">↺ Undo</button>
@@ -649,7 +747,7 @@
         const input = document.getElementById(`score_announce_${id}`);
         if (!input) return;
         const val = input.value.trim();
-        const team = teams.find(t => t.id === id);
+        const team = teams.find((t) => t.id === id);
         if (team) {
           team.score = val === "" ? null : Number(val);
           send();
@@ -658,11 +756,7 @@
       }
 
       function markFinish(id) {
-        if (
-          !isCountdownActive() ||
-          finishOrder.includes(id)
-        )
-          return;
+        if (!isCountdownActive() || finishOrder.includes(id)) return;
 
         finishOrder.push(id);
         finishTimes[id] = formatMMSS(localTimerState.remaining);
@@ -739,7 +833,13 @@
       }
 
       // ===== TIMER LOGIC =====
-      let localTimerState = { phase: 'idle', prepTotal: 30, playTotal: 120, remaining: 0, running: false };
+      let localTimerState = {
+        phase: "idle",
+        prepTotal: 30,
+        playTotal: 120,
+        remaining: 0,
+        running: false,
+      };
 
       function parseMMSS(str) {
         const parts = String(str).trim().split(":");
@@ -785,7 +885,8 @@
           const warn = state.running && state.remaining <= 5;
           prepDisp.className = "timer-display" + (warn ? " warning" : "");
           prepBadge.textContent = state.running ? "RUNNING" : "PAUSED";
-          prepBadge.className = "timer-phase-badge " + (state.running ? "active" : "paused");
+          prepBadge.className =
+            "timer-phase-badge " + (state.running ? "active" : "paused");
         } else if (isDone && !isPlay) {
           prepDisp.textContent = "00:00";
           prepDisp.className = "timer-display done";
@@ -807,7 +908,8 @@
           const warn = state.running && state.remaining <= 5;
           playDisp.className = "timer-display" + (warn ? " warning" : "");
           playBadge.textContent = state.running ? "RUNNING" : "PAUSED";
-          playBadge.className = "timer-phase-badge " + (state.running ? "active" : "paused");
+          playBadge.className =
+            "timer-phase-badge " + (state.running ? "active" : "paused");
         } else if (isDone) {
           playDisp.textContent = "00:00";
           playDisp.className = "timer-display done";
@@ -820,8 +922,12 @@
           playBadge.className = "timer-phase-badge idle";
         }
 
-        document.getElementById("prepInput").value = formatMMSS(state.prepTotal);
-        document.getElementById("playInput").value = formatMMSS(state.playTotal);
+        document.getElementById("prepInput").value = formatMMSS(
+          state.prepTotal,
+        );
+        document.getElementById("playInput").value = formatMMSS(
+          state.playTotal,
+        );
 
         renderFinishList();
         send();
@@ -829,13 +935,14 @@
 
       function resetRound() {
         if (!confirm("Are you sure you want to reset the round?")) return;
-        socket.emit("timer-control", { action: 'reset' });
+        socket.emit("timer-control", { action: "reset" });
         finishOrder = [];
         finishTimes = {};
         finishClocks = {};
         activePushes = {};
         lastPushTimes = {};
-        teams.forEach(t => {
+        logRows = {};
+        teams.forEach((t) => {
           t.score = null;
         });
         renderTeamPool();
@@ -845,7 +952,11 @@
       }
 
       function isCountdownActive() {
-        return localTimerState.phase === 'play' && localTimerState.running && localTimerState.remaining > 0;
+        return (
+          localTimerState.phase === "play" &&
+          localTimerState.running &&
+          localTimerState.remaining > 0
+        );
       }
 
       function updatePushState(data) {
@@ -924,14 +1035,14 @@
             "Timer At Press",
             "Timer At Release",
             "Hold Duration (sec)",
-            "Score"
+            "Score",
           ],
         ];
 
         logRows
           .filter((row) => row.recordType === "finish")
           .forEach((row) => {
-            const teamObj = teams.find(t => t.name === row.team);
+            const teamObj = teams.find((t) => t.name === row.team);
             rows.push([
               "finish",
               row.round,
@@ -945,7 +1056,7 @@
               "",
               "",
               "",
-              teamObj && teamObj.score != null ? teamObj.score : ""
+              teamObj && teamObj.score != null ? teamObj.score : "",
             ]);
           });
 
@@ -963,7 +1074,7 @@
             push.timerAtPress,
             "",
             "",
-            ""
+            "",
           ]);
         });
 
@@ -981,7 +1092,7 @@
             push.timerAtPress,
             push.timerAtRelease,
             push.durationSec,
-            ""
+            "",
           ]);
         });
 
@@ -1003,13 +1114,14 @@
               ? finishOrder.indexOf(team.id) + 1
               : null,
             finishTime: finishTimes[team.id] || null,
-            score: team.score !== undefined ? team.score : null
+            score: team.score !== undefined ? team.score : null,
           })),
           finishOrder,
           timer: formatMMSS(localTimerState.remaining),
-          timerUrgent: localTimerState.running && localTimerState.remaining <= 5,
+          timerUrgent:
+            localTimerState.running && localTimerState.remaining <= 5,
           timerRunning: localTimerState.running,
-          timerStarted: localTimerState.phase !== 'idle',
+          timerStarted: localTimerState.phase !== "idle",
           eventName: document.getElementById("eventName").value,
           roundNum: document.getElementById("roundNum").value,
           roundLabel: document.getElementById("roundLabel").value,

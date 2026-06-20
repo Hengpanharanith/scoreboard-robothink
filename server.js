@@ -634,16 +634,22 @@ io.on("connection", (socket) => {
   socket.on('timer-control', (data) => {
     const { action, phase } = data
     if (action === 'start') {
-      if (!timerState.running) {
-        if (phase && timerState.phase !== phase) {
-          timerState.phase = phase
-          timerState.remaining = phase === 'prep' ? timerState.prepTotal : timerState.playTotal
-        } else if (timerState.phase === 'idle') {
-          timerState.phase = 'prep'
-          timerState.remaining = timerState.prepTotal
-        }
-        timerState.running = true
+      const requestedPhase = phase === 'prep' || phase === 'play' ? phase : null
+
+      // An explicit START must also work while the other phase is running.
+      // Previously the outer `!timerState.running` guard silently ignored it.
+      if (requestedPhase && timerState.phase !== requestedPhase) {
+        timerState.phase = requestedPhase
+        timerState.remaining = requestedPhase === 'prep'
+          ? timerState.prepTotal
+          : timerState.playTotal
+      } else if (timerState.phase === 'idle' || timerState.phase === 'done') {
+        timerState.phase = requestedPhase || 'prep'
+        timerState.remaining = timerState.phase === 'prep'
+          ? timerState.prepTotal
+          : timerState.playTotal
       }
+      timerState.running = true
     } else if (action === 'pause') {
       timerState.running = false
     } else if (action === 'reset') {

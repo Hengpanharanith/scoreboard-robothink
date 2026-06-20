@@ -657,7 +657,7 @@
 
         if (isAdd && status === "ready") {
           let timeStr = "";
-          if (switchName === "...") {
+          if (switchName === "Goal Before Opponent") {
             timeStr = getPlayTimerDisplay();
           }
           socket.emit("tech-switch-change", {
@@ -757,11 +757,18 @@
 
       function exportCSV() {
         const rows = [
-          ["Team", "Score", "Robot Stop At Finish Time", "Active Zones"],
+          [
+            "Team",
+            "Score",
+            "Robot Stop At Finish Time",
+            "Goal Before Opponent Time",
+            "Active Zones",
+          ],
           [
             currentState.redName || "Red Team",
             currentState.redScore || 0,
             currentState.redFinalDestTime || "N/A",
+            currentState.redGoalBeforeTime || "N/A",
             Object.entries(currentState.redSwitches || {})
               .filter(([_, status]) => status === "added")
               .map(([name]) => name)
