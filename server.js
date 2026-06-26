@@ -297,6 +297,7 @@ function getPlayTimerDisplay() {
 
 const express = require("express")
 const http = require("http")
+const os = require("os")
 const { Server } = require("socket.io")
 const { SerialPort } = require("serialport")
 const { ReadlineParser } = require("@serialport/parser-readline")
@@ -427,40 +428,52 @@ function closePort(cb) {
   if (cb) cb()
 }
 
+// Repeats of the same button+state arriving faster than this are treated as
+// streaming/bounce noise and dropped. Slower than this is a real new press and
+// is always sent through (so a held/stuck button can never swallow a later
+// press of the same button).
+const BUTTON_DEBOUNCE_MS = 150
+
 function handleSerialData(data) {
-  const raw = String(data).trim()
+  const raw = String(data)
   const eventTime = new Date()
   const clockTime = eventTime.toLocaleTimeString()
   const isoTime = eventTime.toISOString()
 
-  console.log("From Arduino:", raw)
-
-  // Get Sample ID
-  const idMatch = raw.match(/Sample ID:\s*(\d+)/i)
-
-  // Get Message
-  const stateMatch = raw.match(/Message:\s*"(true|ready)"/i)
-
-  if (!idMatch || !stateMatch) {
-    console.log("Invalid format")
-    return
+  // A single serial chunk can carry more than one "Sample ID ... Message" pair
+  // (e.g. several buttons fire at once and a newline gets dropped). Parse EVERY
+  // pair, not just the first, so no simultaneous press is lost.
+  const re = /Sample ID:\s*(\d+)[\s\S]*?Message:\s*"(true|ready)"/gi
+  let m
+  while ((m = re.exec(raw)) !== null) {
+    emitButtonEvent(m[1], m[2].toLowerCase(), eventTime.getTime(), clockTime, isoTime)
   }
+}
 
-  const sampleId = idMatch[1]
-  const buttonState = stateMatch[1].toLowerCase()
-
-  // ONLY true = pressed
+function emitButtonEvent(sampleId, buttonState, now, clockTime, isoTime) {
+  // ONLY true = pressed; ready = waiting state
   const isPressed = buttonState === "true"
-
-  // ready = waiting state
   const isReady = buttonState === "ready"
 
-  console.log("Parsed:", {
-    sampleId,
-    buttonState,
-    isPressed,
-    isReady
-  })
+  const prev = buttonStates[sampleId]
+  if (prev && prev.state === buttonState) {
+    // Same state as last time. Refresh the timestamp (so a continuously held
+    // button keeps sliding the window and never re-emits), and only drop it
+    // while the repeats keep coming faster than the debounce window.
+    const recent = now - (prev.lastSeen || 0) < BUTTON_DEBOUNCE_MS
+    prev.lastSeen = now
+    if (recent) return
+  }
+
+  buttonStates[sampleId] = {
+    id: Number(sampleId),
+    state: buttonState,
+    pressed: isPressed,
+    ready: isReady,
+    lastSeen: now,
+  }
+
+  console.log("Button change:", sampleId, "->", buttonState)
 
   io.emit("button-update", {
     id: sampleId,
@@ -700,6 +713,30 @@ function shutdown() {
 process.on("SIGINT", shutdown)
 process.on("SIGTERM", shutdown)
 
-server.listen(8888, () => {
-  console.log("Server running at http://localhost:8888/")
+function getLocalIPs() {
+  const nets = os.networkInterfaces()
+  const ips = []
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      // Keep only external (non-internal) IPv4 addresses.
+      if (net.family === "IPv4" && !net.internal) {
+        ips.push(net.address)
+      }
+    }
+  }
+  return ips
+}
+
+const PORT = 8888
+
+// Listen on 0.0.0.0 so other devices on the same network can reach it.
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("Server running at:")
+  console.log(`  Local:   http://localhost:${PORT}/`)
+  const ips = getLocalIPs()
+  if (ips.length) {
+    ips.forEach((ip) => console.log(`  Network: http://${ip}:${PORT}/`))
+  } else {
+    console.log("  Network: no external IPv4 address found")
+  }
 })

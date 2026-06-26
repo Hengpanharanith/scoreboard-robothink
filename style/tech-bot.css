@@ -145,10 +145,13 @@ body::before {
   position: relative;
 }
 .team-panel.blue {
-  border-right: 1px solid var(--border);
+  order: 2;
+  border-right: none;
   background: linear-gradient(160deg, #ffffff 0%, #f0f6ff 100%);
 }
 .team-panel.red {
+  order: 1;
+  border-right: 1px solid var(--border);
   background: linear-gradient(160deg, #ffffff 0%, #fff0f0 100%);
 }
 
@@ -481,7 +484,7 @@ input[type="file"] {
   .main {
     grid-template-columns: 1fr;
   }
-  .team-panel.blue {
+  .team-panel.red {
     border-right: none;
   }
 }

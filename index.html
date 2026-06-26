@@ -941,7 +941,7 @@
         finishClocks = {};
         activePushes = {};
         lastPushTimes = {};
-        logRows = {};
+        logRows = [];
         teams.forEach((t) => {
           t.score = null;
         });
@@ -1102,7 +1102,23 @@
         );
       }
 
+      let sendTimer = null;
+
+      // Coalesce bursts of updates (e.g. several buttons pressed at the same
+      // time) into a single broadcast. Without this, each press emits its own
+      // heavy display-update payload (every team image included), the server
+      // fans every one out to all clients, and the displays choke / drop
+      // updates. setTimeout(..., 40) fires once after the burst settles and
+      // reads the live state, so the single send reflects all the presses.
       function send() {
+        if (sendTimer) return;
+        sendTimer = setTimeout(() => {
+          sendTimer = null;
+          sendNow();
+        }, 40);
+      }
+
+      function sendNow() {
         const payload = {
           teams: teams.map((team, index) => ({
             id: team.id,
